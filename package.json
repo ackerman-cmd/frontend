@@ -1,16 +1,25 @@
 {
-  "name": "user-service-front",
+  "name": "frontend",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@ant-design/icons": "^6.1.0",
+    "@hookform/resolvers": "^5.2.2",
+    "@reduxjs/toolkit": "^2.11.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^13.5.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "@testing-library/user-event": "^14.6.1",
+    "antd": "^6.3.1",
+    "jwt-decode": "^4.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-hook-form": "^7.71.2",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.13.1",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "zod": "^4.3.6"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -35,5 +44,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "typescript": "4.9.5"
   }
 }

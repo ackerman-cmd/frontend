@@ -1,13 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --yellow:        #FFDD2D;
+  --yellow-hover:  #F5C800;
+  --yellow-light:  #FFFBE6;
+  --yellow-glow:   rgba(255,221,45,0.18);
+  --black:         #1A1A1A;
+  --black-soft:    #242424;
+  --black-card:    #2C2C2C;
+  --white:         #FFFFFF;
+  --gray-50:       #FAFAFA;
+  --gray-100:      #F5F5F5;
+  --gray-200:      #EBEBEB;
+  --gray-300:      #D9D9D9;
+  --gray-400:      #BFBFBF;
+  --gray-500:      #8C8C8C;
+  --gray-600:      #595959;
+  --gray-700:      #434343;
+  --red:           #FF4D4F;
+  --green:         #52C41A;
+  --blue:          #1677FF;
+
+  --sidebar-w:     256px;
+  --topbar-h:      64px;
+
+  --radius-xs:     4px;
+  --radius-sm:     8px;
+  --radius-md:     12px;
+  --radius-lg:     16px;
+  --radius-xl:     24px;
+  --shadow-xs:     0 1px 3px rgba(0,0,0,0.07);
+  --shadow-sm:     0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md:     0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,0.13);
+  --transition:    0.18s ease;
+}
+
+html, body, #root {
+  margin: 0; padding: 0;
+  min-height: 100vh;
+  width: 100%;
+}
+
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--black);
+  background: var(--gray-100);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.ant-btn-primary {
+  background: var(--yellow) !important;
+  border-color: var(--yellow) !important;
+  color: var(--black) !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+}
+.ant-btn-primary:hover:not(:disabled) {
+  background: var(--yellow-hover) !important;
+  border-color: var(--yellow-hover) !important;
+}
+.ant-spin-dot-item { background-color: var(--yellow) !important; }
+.ant-message-notice-content { font-size: 15px !important; border-radius: var(--radius-md) !important; }

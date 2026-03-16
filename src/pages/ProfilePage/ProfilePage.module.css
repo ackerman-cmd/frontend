@@ -1,0 +1,142 @@
+.page { display: flex; flex-direction: column; gap: 24px; animation: fadeInUp 0.3s ease both; max-width: 860px; }
+
+.pageHeader { display: flex; align-items: center; gap: 16px; margin-bottom: 4px; }
+.pageTitle { font-size: 28px; font-weight: 800; color: var(--black); letter-spacing: -0.6px; margin: 0; }
+
+.avatarCard {
+  background: var(--black);
+  border-radius: var(--radius-lg);
+  padding: 32px 36px;
+  display: flex; align-items: center; gap: 28px;
+  position: relative; overflow: hidden;
+}
+.avatarCard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--yellow); }
+.avatarCard::after {
+  content: ''; position: absolute; top: -60px; right: -60px;
+  width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,221,45,0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.avatarCircle {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--yellow);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; font-weight: 800; color: var(--black);
+  flex-shrink: 0; position: relative; z-index: 1;
+}
+.avatarInfo { position: relative; z-index: 1; }
+.avatarName { font-size: 22px; font-weight: 800; color: var(--white); margin: 0 0 4px; letter-spacing: -0.4px; }
+.avatarUsername { font-size: 14px; color: rgba(255,255,255,0.45); margin: 0 0 10px; }
+.statusBadge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600;
+  border-radius: 99px; padding: 4px 12px;
+}
+.statusActive   { background: rgba(82,196,26,0.15);  color: #52c41a; }
+.statusInactive { background: rgba(140,140,140,0.15); color: #8c8c8c; }
+.statusBlocked  { background: rgba(245,34,45,0.12);  color: var(--red); }
+.statusPending  { background: rgba(255,221,45,0.15); color: #b8860b; }
+.statusDot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--gray-200);
+  overflow: hidden;
+}
+.cardHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px 16px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.cardTitle { font-size: 15px; font-weight: 700; color: var(--black); margin: 0; }
+.cardBody { padding: 20px 24px 24px; }
+
+.infoList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.infoRow {
+  display: flex; align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-200);
+}
+.infoRow:last-child { border-bottom: none; }
+.infoKey { font-size: 13px; font-weight: 500; color: var(--gray-500); width: 180px; flex-shrink: 0; }
+.infoVal { font-size: 14px; font-weight: 500; color: var(--black); flex: 1; }
+
+.roleChip {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 600;
+  background: var(--gray-100); color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+  border-radius: 99px; padding: 3px 10px;
+  margin-right: 6px;
+}
+
+.formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: 13px; font-weight: 600; color: var(--black); }
+.input {
+  height: 48px; padding: 0 14px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 15px; font-family: inherit;
+  color: var(--black); background: var(--gray-50);
+  outline: none;
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+.input:focus {
+  border-color: var(--black); background: var(--white);
+  box-shadow: 0 0 0 3px rgba(26,26,26,0.07);
+}
+
+.formActions { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
+.btnPrimary {
+  height: 48px; padding: 0 28px;
+  background: var(--yellow); border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px; font-weight: 700; color: var(--black); font-family: inherit;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.btnPrimary:hover:not(:disabled) {
+  background: var(--yellow-hover); transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255,221,45,0.3);
+}
+.btnPrimary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btnSecondary {
+  height: 48px; padding: 0 24px;
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 15px; font-weight: 600; color: var(--black); font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+.btnSecondary:hover { border-color: var(--gray-400); background: var(--gray-50); }
+
+.loadingWrap { display: flex; align-items: center; justify-content: center; min-height: 40vh; }
+.errorWrap {
+  background: #fff1f0; border: 1.5px solid #ffa39e;
+  border-radius: var(--radius-lg); padding: 32px;
+  font-size: 15px; color: #a8071a;
+  display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;
+}
+
+.modalField { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.modalLabel { font-size: 13px; font-weight: 600; color: var(--black); }
+.modalInput {
+  height: 46px; padding: 0 14px;
+  border: 2px solid var(--gray-200); border-radius: var(--radius-md);
+  font-size: 15px; font-family: inherit; color: var(--black); background: var(--gray-50); outline: none;
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+.modalInput:focus { border-color: var(--black); background: var(--white); box-shadow: 0 0 0 3px rgba(26,26,26,0.07); }
+.modalErr { font-size: 12px; color: var(--red); margin: 2px 0 0; }
+.modalActions { display: flex; gap: 10px; margin-top: 24px; }
+
+@media (max-width: 640px) {
+  .avatarCard { flex-direction: column; align-items: flex-start; padding: 24px; gap: 16px; }
+  .formGrid { grid-template-columns: 1fr; }
+  .infoKey { width: 130px; font-size: 12px; }
+}
