@@ -1,5 +1,6 @@
 import { baseApi } from './baseApi';
 import type { UserResponse, UserStatus } from '../../entities/user/model/types';
+import type { PageResponse } from '../../entities/common/types';
 
 export const adminApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -28,6 +29,17 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { id }) => [{ type: 'AdminUser', id }],
     }),
+
+    listOperators: builder.query<
+      PageResponse<UserResponse>,
+      { page?: number; size?: number } | void
+    >({
+      query: (params) => ({
+        url: '/api/v1/admin/users',
+        params: { page: params?.page ?? 0, size: params?.size ?? 200 },
+      }),
+      providesTags: ['AdminUser'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -36,4 +48,5 @@ export const {
   useAdminGetUserByIdQuery,
   useAdminGetUserByUsernameQuery,
   useAdminChangeUserStatusMutation,
+  useListOperatorsQuery,
 } = adminApi;

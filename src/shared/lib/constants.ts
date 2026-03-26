@@ -1,6 +1,9 @@
 export const API_BASE_URL =
   process.env.REACT_APP_API_URL ?? 'http://localhost:8080';
 
+export const CRM_API_BASE_URL =
+  process.env.REACT_APP_CRM_API_URL ?? 'http://localhost:8083';
+
 export const OAUTH_CLIENT_ID =
   process.env.REACT_APP_OAUTH_CLIENT_ID ?? 'spa-client';
 

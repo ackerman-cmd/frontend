@@ -29,7 +29,7 @@
 }
 
 .cardTop {
-  background: var(--black);
+  background: var(--white);
   padding: 40px 40px 36px;
   position: relative;
 }
@@ -38,18 +38,18 @@
   position: absolute;
   bottom: 0; left: 40px; right: 40px;
   height: 1px;
-  background: rgba(255,255,255,0.08);
+  background: var(--gray-200);
 }
 
 .cardTitle {
   font-size: 28px; font-weight: 800;
-  color: var(--white);
+  color: var(--black);
   letter-spacing: -0.6px;
   margin: 0 0 4px;
 }
 .cardSubtitle {
   font-size: 15px;
-  color: rgba(255,255,255,0.45);
+  color: var(--gray-500);
   margin: 0;
 }
 

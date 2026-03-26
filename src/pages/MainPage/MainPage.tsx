@@ -11,6 +11,7 @@ export default function MainPage() {
             <ToolOutlined className={styles.icon} />
           </div>
           <h1 className={styles.title}>Главная страница</h1>
+          <div className={styles.brand}>arm-support-service</div>
           <p className={styles.subtitle}>🚧 Страница в разработке</p>
         </div>
       </div>

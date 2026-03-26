@@ -6,16 +6,28 @@ import {
   LogoutOutlined,
   MenuOutlined,
   UserOutlined,
+  FileTextOutlined,
+  BankOutlined,
+  ApartmentOutlined,
+  StarOutlined,
+  TagsOutlined,
 } from '@ant-design/icons';
+import { Tooltip } from 'antd';
 import { useAppDispatch } from '../store/hooks';
 import { useAuth } from '../../shared/hooks/useAuth';
 import { logout } from '../../features/auth/model/authSlice';
 import { baseApi } from '../../shared/api/baseApi';
+import { crmApi } from '../../shared/api/crmBaseApi';
 import { useServerLogoutMutation } from '../../shared/api/authApi';
 import styles from './AppLayout.module.css';
 
 const MAIN_NAV = [
   { to: '/', label: 'Главная', icon: <HomeOutlined />, exact: true },
+  { to: '/appeals', label: 'Обращения', icon: <FileTextOutlined />, exact: false },
+  { to: '/organizations', label: 'Организации', icon: <BankOutlined />, exact: false },
+  { to: '/assignment-groups', label: 'Группы назначения', icon: <ApartmentOutlined />, exact: false },
+  { to: '/skill-groups', label: 'Скилл-группы', icon: <StarOutlined />, exact: false },
+  { to: '/appeal-topics', label: 'Тематики', icon: <TagsOutlined />, exact: false },
 ];
 
 const ADMIN_NAV = [
@@ -33,6 +45,7 @@ export default function AppLayout() {
     try { await serverLogout().unwrap(); } catch { }
     dispatch(logout());
     dispatch(baseApi.util.resetApiState());
+    dispatch(crmApi.util.resetApiState());
     navigate('/login', { replace: true });
   };
 
@@ -48,61 +61,53 @@ export default function AppLayout() {
 
         <div className={styles.logoArea}>
           <Link to="/" className={styles.logoLink} onClick={close}>
-            <div className={styles.logoSquare}>US</div>
-            <div className={styles.logoTexts}>
-              <span className={styles.logoName}>UserService</span>
-              <span className={styles.logoSub}>Portal</span>
-            </div>
+            <div className={styles.logoSquare}>AS</div>
           </Link>
         </div>
 
         <div className={styles.divider} />
-        <div className={styles.sectionLabel}>Навигация</div>
 
         <nav className={styles.nav}>
           {MAIN_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.exact}
-              onClick={close}
-              className={({ isActive }) =>
-                isActive
-                  ? `${styles.navLink} ${styles.navLinkActive}`
-                  : styles.navLink
-              }
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              {item.label}
-            </NavLink>
+            <Tooltip key={item.to} title={item.label} placement="right">
+              <NavLink
+                to={item.to}
+                end={item.exact}
+                onClick={close}
+                className={({ isActive }) =>
+                  isActive
+                    ? `${styles.navLink} ${styles.navLinkActive}`
+                    : styles.navLink
+                }
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+              </NavLink>
+            </Tooltip>
           ))}
 
           {isAdmin && (
             <>
-              <div className={styles.divider} style={{ margin: '8px 0' }} />
-              <div className={styles.sectionLabel} style={{ padding: '0 0 4px' }}>
-                Администрирование
-              </div>
+              <div className={styles.divider} style={{ margin: '8px 4px' }} />
               {ADMIN_NAV.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={close}
-                  className={({ isActive }) =>
-                    isActive
-                      ? `${styles.navLink} ${styles.navLinkActive}`
-                      : styles.navLink
-                  }
-                >
-                  <span className={styles.navIcon}>{item.icon}</span>
-                  {item.label}
-                </NavLink>
+                <Tooltip key={item.to} title={item.label} placement="right">
+                  <NavLink
+                    to={item.to}
+                    onClick={close}
+                    className={({ isActive }) =>
+                      isActive
+                        ? `${styles.navLink} ${styles.navLinkActive}`
+                        : styles.navLink
+                    }
+                  >
+                    <span className={styles.navIcon}>{item.icon}</span>
+                  </NavLink>
+                </Tooltip>
               ))}
             </>
           )}
         </nav>
 
-        <div className={styles.sidebarFooter}>© 2026 UserService</div>
+        <div className={styles.sidebarFooter}>arm-support-service</div>
       </aside>
 
       {sidebarOpen && <div className={styles.overlay} onClick={close} />}

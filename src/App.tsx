@@ -6,12 +6,18 @@ import { useAuth } from './shared/hooks/useAuth';
 import { useStorageSync } from './shared/hooks/useStorageSync';
 import AppLayout from './app/layout/AppLayout';
 
-const LoginPage        = React.lazy(() => import('./pages/LoginPage/LoginPage'));
-const RegisterPage     = React.lazy(() => import('./pages/RegisterPage/RegisterPage'));
-const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage/AuthCallbackPage'));
-const VerifyEmailPage  = React.lazy(() => import('./pages/VerifyEmailPage/VerifyEmailPage'));
-const ProfilePage      = React.lazy(() => import('./pages/ProfilePage/ProfilePage'));
-const MainPage         = React.lazy(() => import('./pages/MainPage/MainPage'));
+const LoginPage           = React.lazy(() => import('./pages/LoginPage/LoginPage'));
+const RegisterPage        = React.lazy(() => import('./pages/RegisterPage/RegisterPage'));
+const AuthCallbackPage    = React.lazy(() => import('./pages/AuthCallbackPage/AuthCallbackPage'));
+const VerifyEmailPage     = React.lazy(() => import('./pages/VerifyEmailPage/VerifyEmailPage'));
+const ProfilePage         = React.lazy(() => import('./pages/ProfilePage/ProfilePage'));
+const MainPage            = React.lazy(() => import('./pages/MainPage/MainPage'));
+const AppealsPage          = React.lazy(() => import('./pages/AppealsPage/AppealsPage'));
+const AppealDetailPage     = React.lazy(() => import('./pages/AppealDetailPage/AppealDetailPage'));
+const OrganizationsPage    = React.lazy(() => import('./pages/OrganizationsPage/OrganizationsPage'));
+const AssignmentGroupsPage = React.lazy(() => import('./pages/AssignmentGroupsPage/AssignmentGroupsPage'));
+const SkillGroupsPage      = React.lazy(() => import('./pages/SkillGroupsPage/SkillGroupsPage'));
+const AppealTopicsPage     = React.lazy(() => import('./pages/AppealTopicsPage/AppealTopicsPage'));
 
 function PrivateRoute({ children }: { children: React.ReactElement }) {
   const { isAuthenticated } = useAuth();
@@ -35,7 +41,7 @@ const PageLoader = () => (
       background: '#FFDD2D',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 22, fontWeight: 900, color: '#1A1A1A',
-    }}>US</div>
+    }}>AS</div>
     <Spin indicator={<LoadingOutlined style={{ fontSize: 28, color: '#1A1A1A' }} spin />} />
   </div>
 );
@@ -90,8 +96,14 @@ function AppRoot() {
         <Route path="/auth/verify"  element={<VerifyEmailPage />} />
 
         <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
-          <Route index           element={<MainPage />} />
-          <Route path="profile"  element={<ProfilePage />} />
+          <Route index                        element={<MainPage />} />
+          <Route path="profile"               element={<ProfilePage />} />
+          <Route path="appeals"               element={<AppealsPage />} />
+          <Route path="appeals/:id"           element={<AppealDetailPage />} />
+          <Route path="organizations"         element={<OrganizationsPage />} />
+          <Route path="assignment-groups"     element={<AssignmentGroupsPage />} />
+          <Route path="skill-groups"          element={<SkillGroupsPage />} />
+          <Route path="appeal-topics"         element={<AppealTopicsPage />} />
         </Route>
 
         <Route path="/admin/users"    element={<AdminRoute><WipPage title="Управление пользователями" /></AdminRoute>} />
