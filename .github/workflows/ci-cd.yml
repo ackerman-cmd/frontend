@@ -23,12 +23,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build frontend
+        env:
+          REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+          REACT_APP_CRM_API_URL: ${{ secrets.REACT_APP_CRM_API_URL }}
+          REACT_APP_EMAIL_INTEGRATION_API_URL: ${{ secrets.REACT_APP_EMAIL_INTEGRATION_API_URL }}
+          REACT_APP_OAUTH_CLIENT_ID: ${{ secrets.REACT_APP_OAUTH_CLIENT_ID }}
+          REACT_APP_OAUTH_REDIRECT_URI: ${{ secrets.REACT_APP_OAUTH_REDIRECT_URI }}
         run: npm run build
 
   publish-docker:
@@ -66,3 +71,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
+            REACT_APP_CRM_API_URL=${{ secrets.REACT_APP_CRM_API_URL }}
+            REACT_APP_EMAIL_INTEGRATION_API_URL=${{ secrets.REACT_APP_EMAIL_INTEGRATION_API_URL }}
+            REACT_APP_OAUTH_CLIENT_ID=${{ secrets.REACT_APP_OAUTH_CLIENT_ID }}
+            REACT_APP_OAUTH_REDIRECT_URI=${{ secrets.REACT_APP_OAUTH_REDIRECT_URI }}
