@@ -27,3 +27,4 @@ yarn-error.log*
 .idea/
 
 package-lock.json
+ARM_INTEGRATION_CONTRACT.md

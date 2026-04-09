@@ -11,13 +11,13 @@ const RegisterPage        = React.lazy(() => import('./pages/RegisterPage/Regist
 const AuthCallbackPage    = React.lazy(() => import('./pages/AuthCallbackPage/AuthCallbackPage'));
 const VerifyEmailPage     = React.lazy(() => import('./pages/VerifyEmailPage/VerifyEmailPage'));
 const ProfilePage         = React.lazy(() => import('./pages/ProfilePage/ProfilePage'));
-const MainPage            = React.lazy(() => import('./pages/MainPage/MainPage'));
 const AppealsPage          = React.lazy(() => import('./pages/AppealsPage/AppealsPage'));
 const AppealDetailPage     = React.lazy(() => import('./pages/AppealDetailPage/AppealDetailPage'));
 const OrganizationsPage    = React.lazy(() => import('./pages/OrganizationsPage/OrganizationsPage'));
 const AssignmentGroupsPage = React.lazy(() => import('./pages/AssignmentGroupsPage/AssignmentGroupsPage'));
 const SkillGroupsPage      = React.lazy(() => import('./pages/SkillGroupsPage/SkillGroupsPage'));
 const AppealTopicsPage     = React.lazy(() => import('./pages/AppealTopicsPage/AppealTopicsPage'));
+const AdminUsersPage       = React.lazy(() => import('./pages/AdminUsersPage/AdminUsersPage'));
 
 function PrivateRoute({ children }: { children: React.ReactElement }) {
   const { isAuthenticated } = useAuth();
@@ -96,18 +96,17 @@ function AppRoot() {
         <Route path="/auth/verify"  element={<VerifyEmailPage />} />
 
         <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
-          <Route index                        element={<MainPage />} />
+          <Route index                        element={<Navigate to="/appeals" replace />} />
           <Route path="profile"               element={<ProfilePage />} />
           <Route path="appeals"               element={<AppealsPage />} />
           <Route path="appeals/:id"           element={<AppealDetailPage />} />
-          <Route path="organizations"         element={<OrganizationsPage />} />
-          <Route path="assignment-groups"     element={<AssignmentGroupsPage />} />
-          <Route path="skill-groups"          element={<SkillGroupsPage />} />
-          <Route path="appeal-topics"         element={<AppealTopicsPage />} />
+          <Route path="organizations"         element={<AdminRoute><OrganizationsPage /></AdminRoute>} />
+          <Route path="assignment-groups"     element={<AdminRoute><AssignmentGroupsPage /></AdminRoute>} />
+          <Route path="skill-groups"          element={<AdminRoute><SkillGroupsPage /></AdminRoute>} />
+          <Route path="appeal-topics"         element={<AdminRoute><AppealTopicsPage /></AdminRoute>} />
+          <Route path="admin/users"           element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+          <Route path="admin/users/:id"       element={<AdminRoute><WipPage title="Детали пользователя" /></AdminRoute>} />
         </Route>
-
-        <Route path="/admin/users"    element={<AdminRoute><WipPage title="Управление пользователями" /></AdminRoute>} />
-        <Route path="/admin/users/:id" element={<AdminRoute><WipPage title="Детали пользователя" /></AdminRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

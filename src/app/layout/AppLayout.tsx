@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  HomeOutlined,
   TeamOutlined,
   LogoutOutlined,
   MenuOutlined,
@@ -19,27 +18,38 @@ import { logout } from '../../features/auth/model/authSlice';
 import { baseApi } from '../../shared/api/baseApi';
 import { crmApi } from '../../shared/api/crmBaseApi';
 import { useServerLogoutMutation } from '../../shared/api/authApi';
+import { ROLE_ADMIN } from '../../shared/lib/constants';
 import styles from './AppLayout.module.css';
 
-const MAIN_NAV = [
-  { to: '/', label: 'Главная', icon: <HomeOutlined />, exact: true },
-  { to: '/appeals', label: 'Обращения', icon: <FileTextOutlined />, exact: false },
-  { to: '/organizations', label: 'Организации', icon: <BankOutlined />, exact: false },
-  { to: '/assignment-groups', label: 'Группы назначения', icon: <ApartmentOutlined />, exact: false },
-  { to: '/skill-groups', label: 'Скилл-группы', icon: <StarOutlined />, exact: false },
-  { to: '/appeal-topics', label: 'Тематики', icon: <TagsOutlined />, exact: false },
+interface NavItem {
+  to: string;
+  label: string;
+  icon: React.ReactNode;
+  exact?: boolean;
+  requiredRoles?: string[];
+}
+
+const MAIN_NAV: NavItem[] = [
+  { to: '/appeals',           label: 'Обращения',         icon: <FileTextOutlined />,  exact: false },
+  { to: '/organizations',     label: 'Организации',       icon: <BankOutlined />,      exact: false, requiredRoles: [ROLE_ADMIN] },
+  { to: '/assignment-groups', label: 'Группы назначения', icon: <ApartmentOutlined />, exact: false, requiredRoles: [ROLE_ADMIN] },
+  { to: '/skill-groups',      label: 'Скилл-группы',      icon: <StarOutlined />,      exact: false, requiredRoles: [ROLE_ADMIN] },
+  { to: '/appeal-topics',     label: 'Тематики',          icon: <TagsOutlined />,      exact: false, requiredRoles: [ROLE_ADMIN] },
 ];
 
-const ADMIN_NAV = [
-  { to: '/admin/users', label: 'Пользователи', icon: <TeamOutlined /> },
+const ADMIN_NAV: NavItem[] = [
+  { to: '/admin/users', label: 'Пользователи', icon: <TeamOutlined />, requiredRoles: [ROLE_ADMIN] },
 ];
 
 export default function AppLayout() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, user, hasAnyRole } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [serverLogout] = useServerLogoutMutation();
+
+  const visibleMainNav  = MAIN_NAV.filter((item) => hasAnyRole(item.requiredRoles ?? []));
+  const visibleAdminNav = ADMIN_NAV.filter((item) => hasAnyRole(item.requiredRoles ?? []));
 
   const handleLogout = async () => {
     try { await serverLogout().unwrap(); } catch { }
@@ -68,7 +78,7 @@ export default function AppLayout() {
         <div className={styles.divider} />
 
         <nav className={styles.nav}>
-          {MAIN_NAV.map((item) => (
+          {visibleMainNav.map((item) => (
             <Tooltip key={item.to} title={item.label} placement="right">
               <NavLink
                 to={item.to}
@@ -85,10 +95,10 @@ export default function AppLayout() {
             </Tooltip>
           ))}
 
-          {isAdmin && (
+          {isAdmin && visibleAdminNav.length > 0 && (
             <>
               <div className={styles.divider} style={{ margin: '8px 4px' }} />
-              {ADMIN_NAV.map((item) => (
+              {visibleAdminNav.map((item) => (
                 <Tooltip key={item.to} title={item.label} placement="right">
                   <NavLink
                     to={item.to}

@@ -1,0 +1,11 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # args:
+      #   REACT_APP_API_URL: https://api.example.com
+      #   REACT_APP_OAUTH_REDIRECT_URI: https://portal.example.com/callback
+    image: userservice-portal-frontend:latest
+    ports:
+      - "8080:80"

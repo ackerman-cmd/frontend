@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Table, Button, Select, Input, Space, Modal, Form, Row, Col,
-  Typography, Tooltip, Popconfirm, message, DatePicker, Card, Tag, Empty, Badge, Drawer,
+  Typography, Tooltip, Popconfirm, message, DatePicker, Card, Tag, Empty, Badge, Drawer, Dropdown,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   PlusOutlined, SearchOutlined, EyeOutlined, PlayCircleOutlined,
   CloseCircleOutlined, StopOutlined, DeleteOutlined, ReloadOutlined,
   FilterOutlined, ClockCircleOutlined, SyncOutlined, CheckCircleOutlined, FireOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -186,25 +188,35 @@ export default function AppealsPage() {
 
   const columns: ColumnsType<AppealResponse> = [
     {
-      title: 'Тема',
-      dataIndex: 'subject',
+      title: 'Обращение',
       key: 'subject',
       ellipsis: true,
-      render: (text, record) => (
-        <div>
-          <Button
-            type="link" style={{ padding: 0, height: 'auto', fontWeight: 500, textAlign: 'left' }}
-            onClick={() => navigate(`/appeals/${record.id}`)}
-          >
-            {text}
-          </Button>
-          {record.topic && (
-            <div>
-              <Tag color="geekblue" style={{ fontSize: 11, borderRadius: 8, marginTop: 2 }}>
+      render: (_, record) => (
+        <div
+          style={{ cursor: 'pointer' }}
+          onClick={() => navigate(`/appeals/${record.id}`)}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+            <AppealChannelTag channel={record.channel} />
+            <span style={{
+              fontWeight: 600, fontSize: 13, color: '#1f1f1f',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 340,
+            }}>
+              {record.subject}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {record.topic && (
+              <Tag color="geekblue" style={{ fontSize: 11, borderRadius: 8, margin: 0 }}>
                 {record.topic.name}
               </Tag>
-            </div>
-          )}
+            )}
+            {record.contactEmail && (
+              <span style={{ fontSize: 11, color: '#8c8c8c' }}>
+                {record.contactEmail}
+              </span>
+            )}
+          </div>
         </div>
       ),
     },
@@ -219,46 +231,32 @@ export default function AppealsPage() {
       title: 'Приоритет',
       dataIndex: 'priority',
       key: 'priority',
-      width: 130,
+      width: 115,
       render: (v) => <AppealPriorityBadge priority={v} size="small" />,
-    },
-    {
-      title: 'Канал',
-      dataIndex: 'channel',
-      key: 'channel',
-      width: 100,
-      render: (v) => <AppealChannelTag channel={v} />,
-    },
-    {
-      title: 'Организация',
-      key: 'organization',
-      width: 160,
-      ellipsis: true,
-      render: (_, r) => r.organization?.name
-        ? <Tag style={{ borderRadius: 8, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.organization.name}</Tag>
-        : <span style={{ color: '#bfbfbf' }}>—</span>,
     },
     {
       title: 'Оператор',
       key: 'operator',
-      width: 150,
+      width: 160,
       ellipsis: true,
       render: (_, r) => r.assignedOperator
         ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{
-              width: 22, height: 22, borderRadius: '50%', background: '#1677ff',
+              width: 24, height: 24, borderRadius: '50%', background: '#1677ff',
               color: '#fff', fontSize: 11, fontWeight: 700, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {r.assignedOperator.fullName.slice(0, 1).toUpperCase()}
             </div>
-            <span style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {r.assignedOperator.fullName}
-            </span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {r.assignedOperator.fullName}
+              </div>
+            </div>
           </div>
         )
-        : <span style={{ color: '#bfbfbf' }}>—</span>,
+        : <span style={{ fontSize: 12, color: '#bfbfbf' }}>Не назначен</span>,
     },
     {
       title: 'Создано',
@@ -274,42 +272,80 @@ export default function AppealsPage() {
     {
       title: '',
       key: 'actions',
-      width: 130,
-      render: (_, record) => (
-        <Space size={4}>
-          <Tooltip title="Открыть">
-            <Button size="small" type="primary" ghost icon={<EyeOutlined />}
-              onClick={() => navigate(`/appeals/${record.id}`)} />
-          </Tooltip>
-          {record.status === 'PENDING_PROCESSING' && (
-            <Tooltip title="Взять в работу">
-              <Button size="small" icon={<PlayCircleOutlined />} style={{ color: '#52c41a', borderColor: '#52c41a' }}
-                onClick={() => handleTake(record.id)} />
-            </Tooltip>
-          )}
-          {record.status !== 'CLOSED' && record.status !== 'SPAM' && (
-            <>
-              <Tooltip title="Закрыть">
-                <Popconfirm title="Закрыть обращение?" onConfirm={() => handleClose(record.id)} okText="Да" cancelText="Нет">
-                  <Button size="small" icon={<CloseCircleOutlined />} />
+      width: 80,
+      render: (_, record) => {
+        const canClose = record.status !== 'CLOSED' && record.status !== 'SPAM';
+        const menuItems: MenuProps['items'] = [
+          {
+            key: 'open',
+            icon: <EyeOutlined />,
+            label: 'Открыть',
+            onClick: () => navigate(`/appeals/${record.id}`),
+          },
+          ...(record.status === 'PENDING_PROCESSING' ? [{
+            key: 'take',
+            icon: <PlayCircleOutlined style={{ color: '#52c41a' }} />,
+            label: 'Взять в работу',
+            onClick: () => handleTake(record.id),
+          }] : []),
+          ...(canClose ? [
+            { type: 'divider' as const },
+            {
+              key: 'close',
+              icon: <CloseCircleOutlined />,
+              label: (
+                <Popconfirm
+                  title="Закрыть обращение?"
+                  onConfirm={() => handleClose(record.id)}
+                  okText="Да" cancelText="Нет"
+                >
+                  <span onClick={(e) => e.stopPropagation()}>Закрыть</span>
                 </Popconfirm>
-              </Tooltip>
-              <Tooltip title="Спам">
-                <Popconfirm title="Пометить как спам?" onConfirm={() => handleSpam(record.id)} okText="Да" cancelText="Нет">
-                  <Button size="small" danger icon={<StopOutlined />} />
+              ),
+            },
+            {
+              key: 'spam',
+              icon: <StopOutlined style={{ color: '#ff4d4f' }} />,
+              label: (
+                <Popconfirm
+                  title="Пометить как спам?"
+                  onConfirm={() => handleSpam(record.id)}
+                  okText="Да" cancelText="Нет"
+                >
+                  <span style={{ color: '#ff4d4f' }} onClick={(e) => e.stopPropagation()}>Спам</span>
                 </Popconfirm>
-              </Tooltip>
-            </>
-          )}
-          {isAdmin && (
-            <Tooltip title="Удалить">
-              <Popconfirm title="Удалить?" onConfirm={() => handleDelete(record.id)} okText="Да" cancelText="Нет">
-                <Button size="small" danger icon={<DeleteOutlined />} />
-              </Popconfirm>
-            </Tooltip>
-          )}
-        </Space>
-      ),
+              ),
+            },
+          ] : []),
+          ...(isAdmin ? [
+            { type: 'divider' as const },
+            {
+              key: 'delete',
+              icon: <DeleteOutlined style={{ color: '#ff4d4f' }} />,
+              label: (
+                <Popconfirm
+                  title="Удалить обращение?"
+                  onConfirm={() => handleDelete(record.id)}
+                  okText="Удалить" okButtonProps={{ danger: true }} cancelText="Нет"
+                >
+                  <span style={{ color: '#ff4d4f' }} onClick={(e) => e.stopPropagation()}>Удалить</span>
+                </Popconfirm>
+              ),
+            },
+          ] : []),
+        ];
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+            <Button
+              size="small"
+              icon={<MoreOutlined />}
+              style={{ borderRadius: 6 }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Dropdown>
+        );
+      },
     },
   ];
 

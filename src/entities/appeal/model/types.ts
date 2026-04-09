@@ -57,6 +57,8 @@ export interface AppealResponse {
   closedAt?: string;
   createdAt: string;
   updatedAt: string;
+  /** UUID переписки в email-integration-service, заполнен только для channel=EMAIL */
+  emailConversationId?: string;
 }
 
 export interface AppealAction {
@@ -141,12 +143,26 @@ export interface AppealMessageResponse {
   channel: AppealChannel;
   externalMessageId?: string;
   createdAt: string;
+  /** Email-specific: HTML-тело письма (только для channel=EMAIL) */
+  htmlContent?: string;
+  /** Email-specific: адрес отправителя */
+  fromEmail?: string;
+  /** Email-specific: адреса получателей */
+  toEmails?: string[];
+  /** Email-specific: адреса в копии */
+  ccEmails?: string[];
+  /** Email-specific: тема письма */
+  emailSubject?: string;
 }
 
 export interface AppealMessageRequest {
   content: string;
   channel: AppealChannel;
   externalMessageId?: string;
+  /** Почтовый ящик-отправитель (только для channel=EMAIL) */
+  fromEmail?: string;
+  /** HTML-тело письма (только для channel=EMAIL) */
+  htmlContent?: string;
 }
 
 export interface AssignOperatorRequest {

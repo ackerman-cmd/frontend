@@ -40,6 +40,17 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       providesTags: ['AdminUser'],
     }),
+
+    adminListUsers: builder.query<
+      PageResponse<UserResponse>,
+      { page: number; size: number; sort?: string }
+    >({
+      query: ({ page, size, sort }) => ({
+        url: '/api/v1/admin/users',
+        params: { page, size, ...(sort ? { sort } : {}) },
+      }),
+      providesTags: ['AdminUser'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -49,4 +60,5 @@ export const {
   useAdminGetUserByUsernameQuery,
   useAdminChangeUserStatusMutation,
   useListOperatorsQuery,
+  useAdminListUsersQuery,
 } = adminApi;
