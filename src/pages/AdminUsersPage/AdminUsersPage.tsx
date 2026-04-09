@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Table, Typography, Tag, Space, Button, Input, Select, Tooltip,
-  message, Popconfirm, Card, Row, Col, Badge,
+  message, Card, Row, Col, Badge,
 } from 'antd';
 import {
   ReloadOutlined, SearchOutlined, UserOutlined,
@@ -27,14 +27,6 @@ const ROLE_COLORS: Record<string, string> = {
   ROLE_OPERATOR: 'blue',
   ROLE_USER:     'default',
 };
-
-const STATUS_OPTIONS: { value: UserStatus | ''; label: string }[] = [
-  { value: '',                    label: 'Все статусы' },
-  { value: 'ACTIVE',               label: 'Активен' },
-  { value: 'INACTIVE',             label: 'Неактивен' },
-  { value: 'BLOCKED',              label: 'Заблокирован' },
-  { value: 'PENDING_VERIFICATION', label: 'Ожидает верификации' },
-];
 
 export default function AdminUsersPage() {
   const [page, setPage]         = useState(0);
@@ -101,7 +93,6 @@ export default function AdminUsersPage() {
       key: 'status',
       width: 185,
       render: (status: UserStatus, record) => {
-        const cfg = STATUS_CONFIG[status];
         return (
           <Select
             size="small"

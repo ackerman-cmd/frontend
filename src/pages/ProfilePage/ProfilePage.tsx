@@ -48,7 +48,7 @@ export default function ProfilePage() {
   const [changePassword, { isLoading: changingPwd }] = useChangePasswordMutation();
   const [pwdModal, setPwdModal] = useState(false);
 
-  const { control: pc, handleSubmit: hps, reset: rp, formState: { errors: pe, isDirty: pd } } =
+  const { control: pc, handleSubmit: hps, reset: rp, formState: { isDirty: pd } } =
     useForm<ProfileForm>({ resolver: zodResolver(profileSchema), defaultValues: { firstName: '', lastName: '' } });
 
   const { control: wc, handleSubmit: hpw, reset: rw, formState: { errors: we } } =

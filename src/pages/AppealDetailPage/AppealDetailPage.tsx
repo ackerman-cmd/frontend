@@ -38,10 +38,10 @@ import { useGetMyMailboxesQuery, useGetAssignmentGroupMailboxQuery } from '../..
 import { useGetEmailMessagesQuery } from '../../shared/api/emailIntegrationApi';
 import type { EmailMessageResponse } from '../../shared/api/emailIntegrationApi';
 import type { OperatorSummaryResponse } from '../../entities/groupReference/model/types';
-import type { AppealStatus, AppealUpdateRequest, AppealMessageResponse, AppealChannel } from '../../entities/appeal/model/types';
+import type { AppealUpdateRequest, AppealMessageResponse, AppealChannel } from '../../entities/appeal/model/types';
 import {
   AppealStatusBadge, AppealPriorityBadge, AppealChannelTag, AppealDirectionTag,
-  STATUS_LABELS, PRIORITY_LABELS, CHANNEL_LABELS,
+  PRIORITY_LABELS, CHANNEL_LABELS,
 } from '../../entities/appeal/ui/AppealBadges';
 import type { AppealTopicCategory } from '../../entities/appealTopic/model/types';
 import { TOPIC_CATEGORY_LABELS, TOPIC_CATEGORY_ICONS } from '../../entities/appealTopic/model/types';
@@ -493,7 +493,7 @@ function AssignmentChip({
 export default function AppealDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAdmin, user } = useAuth();
+  const { isAdmin } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [assignModalOpen, setAssignModalOpen] = useState(false);

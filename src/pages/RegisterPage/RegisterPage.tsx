@@ -8,7 +8,6 @@ import {
   UserOutlined,
   LockOutlined,
   ArrowLeftOutlined,
-  ArrowRightOutlined,
   LoadingOutlined,
   ExclamationCircleOutlined,
   EyeOutlined,
