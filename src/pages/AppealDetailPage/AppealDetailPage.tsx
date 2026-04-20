@@ -9,9 +9,9 @@ import {
   ArrowLeftOutlined, PlayCircleOutlined, CloseCircleOutlined, StopOutlined,
   UserSwitchOutlined, SendOutlined, EditOutlined, DeleteOutlined,
   TagOutlined, UserOutlined, BankOutlined, TeamOutlined,
-  ReloadOutlined, MailOutlined, MessageOutlined,
+  ReloadOutlined, MailOutlined,
   PaperClipOutlined, ForwardOutlined, CaretDownOutlined, CaretRightOutlined,
-  DownOutlined, LinkOutlined, UploadOutlined, CloseOutlined,
+  DownOutlined, LinkOutlined, CloseOutlined,
   FileOutlined, FilePdfOutlined, FileImageOutlined, FileExcelOutlined,
   FileWordOutlined, FileZipOutlined, FileTextOutlined,
 } from '@ant-design/icons';
@@ -81,11 +81,6 @@ const editSchema = z.object({
 type EditFormValues = z.infer<typeof editSchema>;
 
 // ─── Channel config ───────────────────────────────────────────────────────────
-
-const CHANNEL_ICON: Record<AppealChannel, React.ReactNode> = {
-  EMAIL: <MailOutlined />,
-  CHAT: <VkIcon />,
-};
 
 const ACTION_ICONS: Record<string, React.ReactNode> = {
   TAKE_INTO_WORK: <PlayCircleOutlined />,
