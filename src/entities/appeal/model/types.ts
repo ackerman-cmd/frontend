@@ -1,6 +1,6 @@
 import type { OperatorSummary } from '../../common/types';
 
-export type AppealChannel = 'EMAIL' | 'LETTER' | 'CALL' | 'CHAT';
+export type AppealChannel = 'EMAIL' | 'CHAT';
 export type AppealDirection = 'INBOUND' | 'OUTBOUND';
 export type AppealStatus =
   | 'PENDING_PROCESSING'
@@ -59,6 +59,8 @@ export interface AppealResponse {
   updatedAt: string;
   /** UUID переписки в email-integration-service, заполнен только для channel=EMAIL */
   emailConversationId?: string;
+  /** VK peer_id пользователя/чата, заполнен только для channel=CHAT */
+  vkPeerId?: number;
 }
 
 export interface AppealAction {
@@ -134,6 +136,15 @@ export interface AppealFilterRequest {
   sortDirection: string;
 }
 
+export interface AppealMessageAttachment {
+  id: string;
+  attachmentType: string;
+  fileName: string;
+  mimeType: string;
+  s3Url: string;
+  fileSize?: number;
+}
+
 export interface AppealMessageResponse {
   id: string;
   appealId: string;
@@ -142,6 +153,7 @@ export interface AppealMessageResponse {
   content: string;
   channel: AppealChannel;
   externalMessageId?: string;
+  attachments: AppealMessageAttachment[];
   createdAt: string;
   /** Email-specific: HTML-тело письма (только для channel=EMAIL) */
   htmlContent?: string;

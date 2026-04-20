@@ -38,7 +38,7 @@ const { RangePicker } = DatePicker;
 const createSchema = z.object({
   subject: z.string().min(1, 'Обязательное поле').max(512),
   description: z.string().optional(),
-  channel: z.enum(['EMAIL', 'LETTER', 'CALL', 'CHAT']),
+  channel: z.enum(['EMAIL', 'CHAT']),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
   contactName: z.string().optional(),
   contactEmail: z.string().email('Некорректный email').optional().or(z.literal('')),

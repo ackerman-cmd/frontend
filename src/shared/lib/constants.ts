@@ -7,6 +7,9 @@ export const CRM_API_BASE_URL =
 export const EMAIL_INTEGRATION_API_BASE_URL =
   process.env.REACT_APP_EMAIL_INTEGRATION_API_URL ?? 'http://localhost:8084';
 
+export const REPORT_API_BASE_URL =
+  process.env.REACT_APP_REPORT_API_URL ?? 'http://localhost:8086';
+
 export const OAUTH_CLIENT_ID =
   process.env.REACT_APP_OAUTH_CLIENT_ID ?? 'spa-client';
 

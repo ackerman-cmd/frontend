@@ -9,9 +9,11 @@ import {
   ArrowLeftOutlined, PlayCircleOutlined, CloseCircleOutlined, StopOutlined,
   UserSwitchOutlined, SendOutlined, EditOutlined, DeleteOutlined,
   TagOutlined, UserOutlined, BankOutlined, TeamOutlined,
-  ReloadOutlined, MailOutlined, MessageOutlined, PhoneOutlined, FileTextOutlined,
+  ReloadOutlined, MailOutlined, MessageOutlined,
   PaperClipOutlined, ForwardOutlined, CaretDownOutlined, CaretRightOutlined,
-  DownOutlined,
+  DownOutlined, LinkOutlined, UploadOutlined, CloseOutlined,
+  FileOutlined, FilePdfOutlined, FileImageOutlined, FileExcelOutlined,
+  FileWordOutlined, FileZipOutlined, FileTextOutlined,
 } from '@ant-design/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +26,10 @@ import {
   useCloseAppealMutation,
   useMarkAppealAsSpamMutation,
   useAssignOperatorMutation,
-  useSendOperatorMessageMutation,
+  useSendEmailMessageMutation,
+  useSendEmailMessageWithAttachmentMutation,
+  useSendChatMessageMutation,
+  useSendChatMessageWithAttachmentMutation,
   useUpdateAppealMutation,
   useDeleteAppealMutation,
   useGetAvailableActionsQuery,
@@ -36,9 +41,9 @@ import { useGetSkillGroupsQuery } from '../../shared/api/skillGroupsApi';
 import { useGetGroupsWithOperatorsQuery } from '../../shared/api/referencesApi';
 import { useGetMyMailboxesQuery, useGetAssignmentGroupMailboxQuery } from '../../shared/api/mailboxesApi';
 import { useGetEmailMessagesQuery } from '../../shared/api/emailIntegrationApi';
-import type { EmailMessageResponse } from '../../shared/api/emailIntegrationApi';
+import type { EmailMessageResponse, EmailAttachment } from '../../shared/api/emailIntegrationApi';
 import type { OperatorSummaryResponse } from '../../entities/groupReference/model/types';
-import type { AppealUpdateRequest, AppealMessageResponse, AppealChannel } from '../../entities/appeal/model/types';
+import type { AppealUpdateRequest, AppealMessageResponse, AppealMessageAttachment, AppealChannel } from '../../entities/appeal/model/types';
 import {
   AppealStatusBadge, AppealPriorityBadge, AppealChannelTag, AppealDirectionTag,
   PRIORITY_LABELS, CHANNEL_LABELS,
@@ -48,6 +53,14 @@ import { TOPIC_CATEGORY_LABELS, TOPIC_CATEGORY_ICONS } from '../../entities/appe
 import { useAuth } from '../../shared/hooks/useAuth';
 import RichTextEditor from '../../shared/ui/RichTextEditor/RichTextEditor';
 
+function VkIcon({ style }: { style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" style={{ verticalAlign: '-0.125em', ...style }}>
+      <path d="M15.684 0H8.316C1.592 0 0 1.592 0 8.316v7.368C0 22.408 1.592 24 8.316 24h7.368C22.408 24 24 22.408 24 15.684V8.316C24 1.592 22.408 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.525-2.049-1.714-1.033-1.01-1.49-.853-1.49.302v1.714c0 .344-.114.546-1.046.546-1.538 0-3.244-.93-4.44-2.66-1.803-2.537-2.296-4.438-2.296-4.838 0-.275.103-.526.606-.526H8.66c.45 0 .622.21.796.7.875 2.507 2.34 4.705 2.944 4.705.228 0 .33-.104.33-.674V11.58c-.066-1.21-.708-1.313-.708-1.743 0-.21.17-.42.444-.42h2.745c.377 0 .513.197.513.64v3.44c0 .378.166.51.28.51.228 0 .42-.132.838-.552 1.296-1.453 2.22-3.7 2.22-3.7.124-.275.332-.526.784-.526h1.743c.523 0 .638.27.523.64-.218.998-2.34 4.007-2.34 4.007-.183.305-.25.44 0 .78.183.247.782.758 1.182 1.218.735.84 1.297 1.55 1.45 2.035.152.48-.096.724-.577.724z" />
+    </svg>
+  );
+}
+
 const { Title, Text } = Typography;
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
@@ -55,7 +68,7 @@ const { Title, Text } = Typography;
 const editSchema = z.object({
   subject: z.string().min(1, 'Обязательное поле').max(512),
   description: z.string().optional(),
-  channel: z.enum(['EMAIL', 'LETTER', 'CALL', 'CHAT']),
+  channel: z.enum(['EMAIL', 'CHAT']),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
   contactName: z.string().optional(),
   contactEmail: z.string().email('Некорректный email').optional().or(z.literal('')),
@@ -71,9 +84,7 @@ type EditFormValues = z.infer<typeof editSchema>;
 
 const CHANNEL_ICON: Record<AppealChannel, React.ReactNode> = {
   EMAIL: <MailOutlined />,
-  CHAT: <MessageOutlined />,
-  CALL: <PhoneOutlined />,
-  LETTER: <FileTextOutlined />,
+  CHAT: <VkIcon />,
 };
 
 const ACTION_ICONS: Record<string, React.ReactNode> = {
@@ -194,6 +205,9 @@ function EmailMessageCard({
                 {bodyContent || <span style={{ color: '#bfbfbf' }}>(нет содержимого)</span>}
               </pre>
             )}
+            {(msg.attachments ?? []).length > 0 && (
+              <EmailAttachmentList attachments={msg.attachments} />
+            )}
           </div>
 
           <div style={{
@@ -228,6 +242,8 @@ function EmailMessageCard({
 
 // ─── Email composer ────────────────────────────────────────────────────────────
 
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
+
 interface EmailComposerProps {
   toEmail?: string;
   subject: string;
@@ -238,6 +254,8 @@ interface EmailComposerProps {
   mailboxesError?: boolean;
   htmlContent: string;
   onHtmlChange: (v: string) => void;
+  attachedFile: File | null;
+  onAttachFile: (f: File | null) => void;
   loading: boolean;
   onSend: () => void;
   onCancel?: () => void;
@@ -247,8 +265,21 @@ interface EmailComposerProps {
 function EmailComposer({
   toEmail, subject, fromEmail, onFromEmailChange,
   mailboxOptions, mailboxesLoading, mailboxesError, htmlContent, onHtmlChange,
-  loading, onSend, onCancel, disabled,
+  attachedFile, onAttachFile, loading, onSend, onCancel, disabled,
 }: EmailComposerProps) {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    if (f && f.size > MAX_ATTACHMENT_BYTES) {
+      message.error(`Файл "${f.name}" превышает 10 МБ`);
+      e.target.value = '';
+      return;
+    }
+    onAttachFile(f);
+    e.target.value = '';
+  };
+
   return (
     <div style={{
       border: '1.5px solid #1677ff',
@@ -257,17 +288,10 @@ function EmailComposer({
       background: '#fff',
       boxShadow: '0 2px 12px rgba(22,119,255,0.10)',
     }}>
-      {/* Meta fields */}
-      <div style={{ padding: '10px 14px', borderBottom: '1px solid #f0f0f0', background: '#fafcff' }}>
+      <div style={{ padding: '10px 14px', borderBottom: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
           <span style={{ fontSize: 12, color: '#8c8c8c', width: 52, flexShrink: 0 }}>Кому:</span>
-          <span style={{
-            fontSize: 13, background: '#e6f4ff', color: '#1677ff',
-            padding: '2px 12px', borderRadius: 20,
-            border: '1px solid #91caff', fontWeight: 500,
-          }}>
-            {toEmail ?? 'клиент'}
-          </span>
+          <span style={{ fontSize: 13, color: '#1f1f1f' }}>{toEmail ?? 'клиент'}</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -316,15 +340,52 @@ function EmailComposer({
         />
       </div>
 
-      {/* Composer footer */}
+      {attachedFile && (
+        <div style={{
+          padding: '6px 14px', borderTop: '1px solid #f0f0f0',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <PaperClipOutlined style={{ color: '#faad14' }} />
+          <span style={{ fontSize: 12, color: '#595959', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {attachedFile.name}
+            <span style={{ color: '#8c8c8c', marginLeft: 6 }}>
+              ({(attachedFile.size / 1024).toFixed(0)} КБ)
+            </span>
+          </span>
+          <Button
+            type="text" size="small" icon={<CloseOutlined />}
+            onClick={() => onAttachFile(null)}
+            style={{ color: '#ff4d4f', padding: 0 }}
+          />
+        </div>
+      )}
+
       <div style={{
         borderTop: '1px solid #f0f0f0', padding: '10px 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: '#fafcff',
       }}>
-        <span style={{ fontSize: 11, color: '#bfbfbf' }}>
-          Ctrl+B — жирный · Ctrl+I — курсив · Ctrl+Z — отменить
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <Tooltip title="Прикрепить файл (макс. 10 МБ)">
+            <Button
+              size="small"
+              icon={<PaperClipOutlined />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled}
+              style={{ borderRadius: 6 }}
+            >
+              Вложение
+            </Button>
+          </Tooltip>
+          <span style={{ fontSize: 11, color: '#bfbfbf' }}>
+            Ctrl+B — жирный · Ctrl+I — курсив
+          </span>
+        </div>
         <Space>
           {onCancel && (
             <Button size="middle" onClick={onCancel} style={{ borderRadius: 6 }}>
@@ -351,6 +412,7 @@ function EmailComposer({
 
 function ChatComposer({
   channel, content, onChange, loading, disabled, onSend,
+  attachedFile, onAttachFile,
 }: {
   channel: AppealChannel;
   content: string;
@@ -358,30 +420,229 @@ function ChatComposer({
   loading: boolean;
   disabled: boolean;
   onSend: () => void;
+  attachedFile: File | null;
+  onAttachFile: (f: File | null) => void;
 }) {
-  const placeholder: Record<AppealChannel, string> = {
-    CHAT: 'Введите сообщение...',
-    CALL: 'Запись звонка / комментарий...',
-    LETTER: 'Текст письма...',
-    EMAIL: 'Введите сообщение...',
+  const isVk = channel === 'CHAT';
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    if (f && f.size > MAX_ATTACHMENT_BYTES) {
+      message.error(`Файл "${f.name}" превышает 10 МБ`);
+      e.target.value = '';
+      return;
+    }
+    onAttachFile(f);
+    e.target.value = '';
   };
+
+  const placeholder: Record<AppealChannel, string> = {
+    EMAIL: 'Введите сообщение...',
+    CHAT: 'Написать в ВКонтакте...',
+  };
+
   return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-      <Input.TextArea
-        value={content}
-        onChange={(e) => onChange(e.target.value)}
-        rows={2}
-        placeholder={placeholder[channel]}
-        onPressEnter={(e) => { if (!e.shiftKey) { e.preventDefault(); onSend(); } }}
-        style={{ resize: 'none', borderRadius: 8, flex: 1 }}
-        disabled={disabled}
-      />
-      <Button
-        type="primary" icon={<SendOutlined />}
-        loading={loading} disabled={disabled || !content.trim()}
-        onClick={onSend} size="large"
-        style={{ borderRadius: 8, flexShrink: 0 }}
-      />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {attachedFile && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: '#f5f5f5', borderRadius: 6, padding: '4px 10px',
+          border: '1px solid #e8e8e8',
+        }}>
+          <PaperClipOutlined style={{ color: '#faad14', flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: '#595959', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {attachedFile.name}
+            <span style={{ color: '#8c8c8c', marginLeft: 6 }}>
+              ({(attachedFile.size / 1024).toFixed(0)} КБ)
+            </span>
+          </span>
+          <Button
+            type="text" size="small" icon={<CloseOutlined />}
+            onClick={() => onAttachFile(null)}
+            style={{ color: '#ff4d4f', padding: 0, flexShrink: 0 }}
+          />
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+        <Input.TextArea
+          value={content}
+          onChange={(e) => onChange(e.target.value)}
+          rows={2}
+          placeholder={placeholder[channel]}
+          onPressEnter={(e) => { if (!e.shiftKey) { e.preventDefault(); onSend(); } }}
+          style={{ resize: 'none', borderRadius: 8, flex: 1 }}
+          disabled={disabled}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <Tooltip title="Прикрепить файл (макс. 10 МБ)">
+            <Button
+              icon={<PaperClipOutlined />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled}
+              size="large"
+              style={{ borderRadius: 8, flexShrink: 0 }}
+            />
+          </Tooltip>
+          <Button
+            type="primary"
+            icon={isVk ? <VkIcon /> : <SendOutlined />}
+            loading={loading}
+            disabled={disabled || (!content.trim() && !attachedFile)}
+            onClick={onSend}
+            size="large"
+            style={{
+              borderRadius: 8, flexShrink: 0,
+              background: isVk ? '#5181b8' : undefined,
+              borderColor: isVk ? '#5181b8' : undefined,
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── File attachment cards ────────────────────────────────────────────────────
+
+function formatBytes(bytes?: number): string {
+  if (bytes == null) return '';
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
+type FileKind = { icon: React.ReactNode; color: string; bg: string };
+
+function fileKind(mimeType: string): FileKind {
+  if (mimeType.startsWith('image/'))
+    return { icon: <FileImageOutlined />, color: '#1677ff', bg: '#e6f4ff' };
+  if (mimeType === 'application/pdf')
+    return { icon: <FilePdfOutlined />, color: '#cf1322', bg: '#fff2f0' };
+  if (mimeType.includes('word') || mimeType.includes('document'))
+    return { icon: <FileWordOutlined />, color: '#003eb3', bg: '#e6f0ff' };
+  if (mimeType.includes('excel') || mimeType.includes('spreadsheet'))
+    return { icon: <FileExcelOutlined />, color: '#237804', bg: '#f6ffed' };
+  if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar') || mimeType.includes('7z'))
+    return { icon: <FileZipOutlined />, color: '#d46b08', bg: '#fff7e6' };
+  if (mimeType.startsWith('text/'))
+    return { icon: <FileTextOutlined />, color: '#595959', bg: '#fafafa' };
+  return { icon: <FileOutlined />, color: '#595959', bg: '#f5f5f5' };
+}
+
+interface FileCardItem {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  size?: number;
+  url?: string;
+}
+
+function FileCards({ items, onLight }: { items: FileCardItem[]; onLight?: boolean }) {
+  if (!items.length) return null;
+  return (
+    <div style={{
+      display: 'flex', flexWrap: 'wrap', gap: 8,
+      marginTop: 10,
+      paddingTop: onLight ? 0 : 10,
+      borderTop: onLight ? 'none' : '1px solid #f0f0f0',
+    }}>
+      {items.map((item) => {
+        const kind = fileKind(item.mimeType);
+        const hasUrl = Boolean(item.url);
+        return (
+          <a
+            key={item.id}
+            href={item.url ?? '#'}
+            download={item.fileName}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => { if (!hasUrl) e.preventDefault(); }}
+            title={item.fileName}
+            style={{
+              display: 'flex', flexDirection: 'column',
+              width: 80, textDecoration: 'none',
+              borderRadius: 8, overflow: 'hidden',
+              border: onLight ? '1px solid rgba(255,255,255,0.35)' : '1px solid #e8e8e8',
+              background: onLight ? 'rgba(255,255,255,0.12)' : '#fff',
+              cursor: hasUrl ? 'pointer' : 'default',
+              transition: 'transform 0.15s, box-shadow 0.15s',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            }}
+            onMouseEnter={(e) => {
+              if (!hasUrl) return;
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)';
+            }}
+          >
+            {/* Icon area */}
+            <div style={{
+              height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: onLight ? 'rgba(255,255,255,0.2)' : kind.bg,
+              fontSize: 22,
+              color: onLight ? 'rgba(255,255,255,0.9)' : kind.color,
+            }}>
+              {kind.icon}
+            </div>
+            {/* Label area */}
+            <div style={{
+              padding: '4px 6px 5px',
+              background: onLight ? 'rgba(0,0,0,0.15)' : '#fafafa',
+              borderTop: onLight ? '1px solid rgba(255,255,255,0.15)' : '1px solid #f0f0f0',
+            }}>
+              <div style={{
+                fontSize: 10, fontWeight: 500, lineHeight: 1.3,
+                color: onLight ? 'rgba(255,255,255,0.95)' : '#1f1f1f',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {item.fileName}
+              </div>
+              {item.size != null && (
+                <div style={{
+                  fontSize: 9, marginTop: 1,
+                  color: onLight ? 'rgba(255,255,255,0.65)' : '#8c8c8c',
+                }}>
+                  {formatBytes(item.size)}
+                </div>
+              )}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  );
+}
+
+function AttachmentList({ attachments, light }: { attachments: AppealMessageAttachment[]; light?: boolean }) {
+  const items: FileCardItem[] = attachments.map((a) => ({
+    id: a.id, fileName: a.fileName, mimeType: a.mimeType,
+    size: a.fileSize ?? undefined, url: a.s3Url,
+  }));
+  return <FileCards items={items} onLight={light} />;
+}
+
+function EmailAttachmentList({ attachments }: { attachments: EmailAttachment[] }) {
+  if (!attachments.length) return null;
+  const items: FileCardItem[] = attachments.map((a) => ({
+    id: a.id, fileName: a.fileName, mimeType: a.contentType,
+    size: a.sizeBytes ?? undefined, url: a.storageUrl,
+  }));
+  return (
+    <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #f0f0f0' }}>
+      <div style={{ fontSize: 11, color: '#8c8c8c', marginBottom: 6 }}>
+        Вложения · {attachments.length}
+      </div>
+      <FileCards items={items} />
     </div>
   );
 }
@@ -390,24 +651,28 @@ function ChatComposer({
 
 function ChatBubble({ msg }: { msg: AppealMessageResponse }) {
   const isOperator = msg.senderType === 'OPERATOR';
+  const isVk = msg.channel === 'CHAT';
+  const operatorColor = isVk ? '#722ed1' : '#1677ff';
   return (
     <div style={{ display: 'flex', flexDirection: isOperator ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8 }}>
       <div style={{
         width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-        background: isOperator ? '#1677ff' : '#e8e8e8',
+        background: isOperator ? operatorColor : '#e8e8e8',
         color: isOperator ? '#fff' : '#595959',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 12, fontWeight: 700,
       }}>
-        {isOperator ? (msg.sender?.fullName ?? 'О').slice(0, 1).toUpperCase() : 'К'}
+        {isOperator
+          ? (msg.sender?.fullName ?? 'О').slice(0, 1).toUpperCase()
+          : <VkIcon style={{ fontSize: 14 }} />}
       </div>
       <div style={{ maxWidth: '72%' }}>
         <div style={{ fontSize: 11, color: '#8c8c8c', marginBottom: 3, textAlign: isOperator ? 'right' : 'left' }}>
-          {isOperator ? (msg.sender?.fullName ?? 'Оператор') : 'Клиент'}
+          {isOperator ? (msg.sender?.fullName ?? 'Оператор') : 'Клиент ВКонтакте'}
           {' · '}{dayjs(msg.createdAt).format('DD.MM HH:mm')}
         </div>
         <div style={{
-          background: isOperator ? '#1677ff' : '#fff',
+          background: isOperator ? operatorColor : '#fff',
           color: isOperator ? '#fff' : '#1f1f1f',
           border: isOperator ? 'none' : '1px solid #e8e8e8',
           borderRadius: isOperator ? '14px 4px 14px 14px' : '4px 14px 14px 14px',
@@ -416,6 +681,7 @@ function ChatBubble({ msg }: { msg: AppealMessageResponse }) {
           whiteSpace: 'pre-wrap', wordBreak: 'break-word',
         }}>
           {msg.content}
+          <AttachmentList attachments={msg.attachments ?? []} light={isOperator} />
         </div>
       </div>
     </div>
@@ -504,9 +770,11 @@ export default function AppealDetailPage() {
   const [emailHtml, setEmailHtml] = useState('');
   const [fromEmail, setFromEmail] = useState('');
   const [showComposer, setShowComposer] = useState(false);
+  const [emailAttachedFile, setEmailAttachedFile] = useState<File | null>(null);
 
   // Chat composer state
   const [chatContent, setChatContent] = useState('');
+  const [chatAttachedFile, setChatAttachedFile] = useState<File | null>(null);
 
   // ── Queries ────────────────────────────────────────────────────────────────
   const { data: appeal, isLoading, isError, refetch } = useGetAppealByIdQuery(id!, { skip: !id });
@@ -516,7 +784,7 @@ export default function AppealDetailPage() {
 
   // Non-email channels: arm-support-service messages with polling
   // appealLoaded ensures we don't fire this request before knowing the channel
-  const { data: messagesPage, isLoading: msgsLoading } = useGetAppealMessagesQuery(
+  const { data: messagesPage, isLoading: msgsLoading, refetch: refetchMessages } = useGetAppealMessagesQuery(
     { id: id! },
     { skip: !id || !appealLoaded || isEmail, pollingInterval: 15000 },
   );
@@ -575,12 +843,12 @@ export default function AppealDetailPage() {
   const [closeAppeal, { isLoading: closing }] = useCloseAppealMutation();
   const [markAsSpam, { isLoading: spamming }] = useMarkAppealAsSpamMutation();
   const [assignOperator, { isLoading: assigning }] = useAssignOperatorMutation();
-  const [sendMessage, { isLoading: sending }] = useSendOperatorMessageMutation();
+  const [sendEmailMessage, { isLoading: sendingEmail }] = useSendEmailMessageMutation();
+  const [sendEmailMessageWithAttachment, { isLoading: sendingEmailAttachment }] = useSendEmailMessageWithAttachmentMutation();
+  const [sendChatMessage, { isLoading: sendingChat }] = useSendChatMessageMutation();
+  const [sendChatMessageWithAttachment, { isLoading: sendingChatAttachment }] = useSendChatMessageWithAttachmentMutation();
   const [updateAppeal, { isLoading: updating }] = useUpdateAppealMutation();
   const [deleteAppeal] = useDeleteAppealMutation();
-
-  // Email отправляется через arm-support-service sendMessage:
-  // arm-support сам вызывает email-integration-service и проставляет emailConversationId
 
   // ── Edit form ──────────────────────────────────────────────────────────────
   const {
@@ -706,24 +974,30 @@ export default function AppealDetailPage() {
     }
     if (!appeal.contactEmail) { message.warning('У обращения не указан email контакта'); return; }
 
+    const firstSendFromEmail = appeal.emailConversationId ? undefined : fromEmail;
+
     try {
-      // Один вызов в arm-support-service: бэк сам решает send vs reply по appeal.emailConversationId,
-      // сам дёргает email-integration-service через EmailIntegrationClient и сохраняет conversationId на обращении.
-      await sendMessage({
-        id,
-        body: {
-          content: textContent || '(html-письмо)',
-          channel: 'EMAIL',
-          fromEmail: appeal.emailConversationId ? undefined : fromEmail,
+      if (emailAttachedFile) {
+        await sendEmailMessageWithAttachment({
+          id,
+          content: textContent || undefined,
+          fromEmail: firstSendFromEmail,
           htmlContent: emailHtml || undefined,
-        },
-      }).unwrap();
+          file: emailAttachedFile,
+        }).unwrap();
+      } else {
+        await sendEmailMessage({
+          id,
+          content: textContent || undefined,
+          fromEmail: firstSendFromEmail,
+          htmlContent: emailHtml || undefined,
+        }).unwrap();
+      }
 
       setEmailHtml('');
+      setEmailAttachedFile(null);
       setShowComposer(false);
       message.success('Письмо отправлено');
-      // Обновляем appeal (чтобы подтянуть emailConversationId при первой отправке),
-      // переписку и доступные действия
       refetch();
       refetchEmailMessages();
       refetchActions();
@@ -733,10 +1007,18 @@ export default function AppealDetailPage() {
   };
 
   const handleSendChat = async () => {
-    if (!chatContent.trim()) return;
+    if (!chatContent.trim() && !chatAttachedFile) return;
     try {
-      await sendMessage({ id, body: { content: chatContent, channel: appeal.channel } }).unwrap();
+      if (chatAttachedFile) {
+        await sendChatMessageWithAttachment({ id, content: chatContent || undefined, file: chatAttachedFile }).unwrap();
+        setChatAttachedFile(null);
+      } else {
+        await sendChatMessage({ id, content: chatContent }).unwrap();
+      }
       setChatContent('');
+      message.success('Сообщение отправлено');
+      refetchMessages();
+      refetchActions();
     } catch { message.error('Не удалось отправить сообщение'); }
   };
 
@@ -852,14 +1134,14 @@ export default function AppealDetailPage() {
         </Card>
       </Col>
 
-      {/* Contact */}
+      
       <Col xs={24} md={12}>
         <Card
           title={<Space size={6}><UserOutlined style={{ color: '#1677ff' }} />Контакт</Space>}
           size="small"
           style={{ borderRadius: 12, border: '1.5px solid #f0f0f0', height: '100%' }}
         >
-          {(appeal.contactName || appeal.contactEmail || appeal.contactPhone) ? (
+          {(appeal.contactName || appeal.contactEmail || appeal.contactPhone || appeal.vkPeerId) ? (
             <Descriptions column={1} size="small" labelStyle={{ color: '#8c8c8c', width: 60 }}>
               {appeal.contactName && (
                 <Descriptions.Item label="Имя">
@@ -890,6 +1172,27 @@ export default function AppealDetailPage() {
                   </Typography.Text>
                 </Descriptions.Item>
               )}
+              {appeal.vkPeerId && (
+                <Descriptions.Item label="VK">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <VkIcon style={{ color: '#5181b8', fontSize: 13 }} />
+                    <Typography.Text
+                      copyable={{ tooltips: ['Копировать peer ID', 'Скопировано'] }}
+                      style={{ fontSize: 12 }}
+                    >
+                      {appeal.vkPeerId}
+                    </Typography.Text>
+                    <a
+                      href={`https://vk.com/im?sel=${appeal.vkPeerId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 11, color: '#5181b8' }}
+                    >
+                      <LinkOutlined />
+                    </a>
+                  </div>
+                </Descriptions.Item>
+              )}
             </Descriptions>
           ) : (
             <div style={{ color: '#bfbfbf', fontSize: 13 }}>Контакт не указан</div>
@@ -901,13 +1204,13 @@ export default function AppealDetailPage() {
               {appeal.assignmentGroup && (
                 <div style={{ marginBottom: 6 }}>
                   <div style={{ fontSize: 11, color: '#8c8c8c', marginBottom: 3 }}>Группа назначения</div>
-                  <Tag color="blue" style={{ borderRadius: 8 }}>{appeal.assignmentGroup.name}</Tag>
+                  <Tag color="blue" style={{ }}>{appeal.assignmentGroup.name}</Tag>
                 </div>
               )}
               {appeal.skillGroup && (
                 <div>
                   <div style={{ fontSize: 11, color: '#8c8c8c', marginBottom: 3 }}>Скилл-группа</div>
-                  <Tag color="purple" style={{ borderRadius: 8 }}>{appeal.skillGroup.name}</Tag>
+                  <Tag color="purple" style={{ }}>{appeal.skillGroup.name}</Tag>
                 </div>
               )}
             </>
@@ -920,8 +1223,6 @@ export default function AppealDetailPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{ maxWidth: isEmail ? 1100 : 1300, margin: '0 auto', animation: 'fadeInUp 0.25s ease both' }}>
-
-      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div style={{
         background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 12,
         padding: '14px 22px', marginBottom: 16,
@@ -929,26 +1230,18 @@ export default function AppealDetailPage() {
       }}>
         <button type="button" onClick={() => navigate('/appeals')}
           style={{
-            background: 'transparent', border: 'none', padding: 0, marginBottom: 8,
+            background: 'none', border: 'none', padding: 0, marginBottom: 10,
             fontSize: 12, color: '#8c8c8c', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 4,
+            display: 'inline-flex', alignItems: 'center', gap: 5,
           }}
         >
-          <ArrowLeftOutlined />Обращения
+          <ArrowLeftOutlined style={{ fontSize: 10 }} />
+          Обращения
         </button>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            {/* Title row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-              <div style={{
-                width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                background: isEmail ? '#e6f4ff' : '#f9f0ff',
-                color: isEmail ? '#1677ff' : '#722ed1',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
-              }}>
-                {CHANNEL_ICON[appeal.channel]}
-              </div>
               <Title level={4} style={{ margin: 0, lineHeight: 1.3, wordBreak: 'break-word', flex: 1, minWidth: 0 }}>
                 {appeal.subject}
               </Title>
@@ -961,7 +1254,7 @@ export default function AppealDetailPage() {
               )}
             </div>
 
-            {/* Status badges + assignment chip */}
+            
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
               <AppealStatusBadge status={appeal.status} />
               <AppealPriorityBadge priority={appeal.priority} />
@@ -972,7 +1265,7 @@ export default function AppealDetailPage() {
               </div>
             </div>
 
-            {/* Action buttons (NO status change selector) */}
+            
             <Space wrap size={8}>
               {headerActions.map((act) => {
                 if (act.action === 'ASSIGN_OPERATOR') return null;
@@ -980,18 +1273,20 @@ export default function AppealDetailPage() {
                 const isConfirm = act.action === 'CLOSE' || act.action === 'MARK_AS_SPAM';
                 const isEnabled = Boolean(act.enabled);
                 const isTakeAction = act.action === 'TAKE_IN_WORK' || act.action === 'TAKE_INTO_WORK';
-                const finalDisabled = (isTakeAction && appeal.status === 'IN_PROGRESS') || !isEnabled;
+
+                // Статус IN_PROGRESS уже отображается через AppealStatusBadge в шапке
+                if (isTakeAction && appeal.status === 'IN_PROGRESS') return null;
 
                 const btn = (
                   <Tooltip key={`${act.action}-t`} title={isEnabled ? act.description : act.hint}>
                     <span>
                       <Button
-                        type={act.action === 'TAKE_INTO_WORK' || act.action === 'TAKE_IN_WORK' ? 'primary' : 'default'}
+                        type={isTakeAction ? 'primary' : 'default'}
                         icon={ACTION_ICONS[act.action]}
                         danger={isDanger}
-                        disabled={finalDisabled}
+                        disabled={!isEnabled}
                         loading={
-                          ((act.action === 'TAKE_IN_WORK' || act.action === 'TAKE_INTO_WORK') && taking) ||
+                          (isTakeAction && taking) ||
                           (act.action === 'CLOSE' && closing) ||
                           (act.action === 'MARK_AS_SPAM' && spamming)
                         }
@@ -1017,7 +1312,7 @@ export default function AppealDetailPage() {
             </Space>
           </div>
 
-          {/* Edit / delete / refresh */}
+          
           <Space>
             <Tooltip title="Обновить"><Button icon={<ReloadOutlined />} onClick={() => refetch()} /></Tooltip>
             <Tooltip title={editEnabled ? 'Редактировать' : (editAction?.hint ?? '')}>
@@ -1039,54 +1334,38 @@ export default function AppealDetailPage() {
         </div>
       </div>
 
-      {/* ── BODY ────────────────────────────────────────────────────────────── */}
-
       {isEmail ? (
         /* EMAIL layout: info row → thread full width */
         <>
           {infoRow}
 
-          {/* Email thread */}
+          
           <div style={{
             background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 12,
             overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
           }}>
-            {/* Thread header */}
+            
             <div style={{
               padding: '12px 20px', borderBottom: '1px solid #f0f0f0',
-              background: '#fafcff',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <MailOutlined style={{ color: '#1677ff' }} />
-                <span style={{ fontWeight: 600, fontSize: 14 }}>Переписка по email</span>
-                <Tag style={{ borderRadius: 20, fontSize: 11 }}>
-                  {emailMessages.length} писем
-                </Tag>
-                {appeal.emailConversationId && (
-                  <Tooltip title={`Conversation ID: ${appeal.emailConversationId}`}>
-                    <Tag color="blue" style={{ borderRadius: 20, fontSize: 10, cursor: 'default' }}>
-                      #{appeal.emailConversationId.slice(0, 8)}
-                    </Tag>
-                  </Tooltip>
+                <MailOutlined style={{ color: '#1677ff', fontSize: 13 }} />
+                <span style={{ fontWeight: 600, fontSize: 14 }}>Переписка</span>
+                {emailMessages.length > 0 && (
+                  <span style={{ fontSize: 12, color: '#8c8c8c' }}>{emailMessages.length} писем</span>
                 )}
               </div>
-              <Space size={6}>
-                <div style={{ fontSize: 12, color: '#8c8c8c' }}>
-                  Тема: {appeal.subject}
-                </div>
-                <Button
-                  size="small" icon={<ReloadOutlined />}
-                  onClick={() => refetchEmailMessages()}
-                  loading={emailMsgsLoading}
-                  style={{ borderRadius: 6 }}
-                />
-              </Space>
+              <Button
+                size="small" type="text" icon={<ReloadOutlined />}
+                onClick={() => refetchEmailMessages()}
+                loading={emailMsgsLoading}
+              />
             </div>
 
-            {/* Messages */}
+            
             <div style={{
-              padding: '16px 20px', background: '#f5f7fb',
+              padding: '16px 20px', background: '#f8f8f9',
               display: 'flex', flexDirection: 'column', gap: 10,
               minHeight: 200, maxHeight: 560, overflowY: 'auto',
             }}>
@@ -1124,21 +1403,21 @@ export default function AppealDetailPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Composer / closed / reply-disabled */}
+            
             <div style={{ padding: '16px 20px', borderTop: '2px solid #e6f4ff' }}>
               {isClosed ? (
-                <div style={{ textAlign: 'center', color: '#52c41a', fontSize: 13, fontWeight: 500 }}>
-                  Обращение закрыто — переписка завершена
+                <div style={{ textAlign: 'center', color: '#8c8c8c', fontSize: 13 }}>
+                  Обращение закрыто
                 </div>
               ) : !canReply ? (
                 <Alert
                   type="info"
                   showIcon
-                  message="Отправка письма сейчас недоступна"
-                  description={replyHint || 'Чтобы отправить письмо, возьмите обращение в работу.'}
+                  message="Отправка недоступна"
+                  description={replyHint || 'Возьмите обращение в работу, чтобы ответить.'}
                   style={{ borderRadius: 8 }}
                 />
-              ) : showComposer ? (
+              ) : (showComposer || !appeal.emailConversationId) ? (
                 <EmailComposer
                   toEmail={appeal.contactEmail}
                   subject={appeal.direction === 'OUTBOUND' ? appeal.subject : `Re: ${appeal.subject}`}
@@ -1149,9 +1428,11 @@ export default function AppealDetailPage() {
                   mailboxesError={mailboxesError}
                   htmlContent={emailHtml}
                   onHtmlChange={setEmailHtml}
-                  loading={sending}
+                  attachedFile={emailAttachedFile}
+                  onAttachFile={setEmailAttachedFile}
+                  loading={sendingEmail || sendingEmailAttachment}
                   onSend={handleSendEmail}
-                  onCancel={emailMessages.length > 0 ? () => { setShowComposer(false); setEmailHtml(''); } : undefined}
+                  onCancel={(showComposer && emailMessages.length > 0) ? () => { setShowComposer(false); setEmailHtml(''); setEmailAttachedFile(null); } : undefined}
                   disabled={isClosed}
                 />
               ) : (
@@ -1169,12 +1450,12 @@ export default function AppealDetailPage() {
       ) : (
         /* Non-email layout: sidebar + chat */
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-          {/* Sidebar */}
+          
           <div style={{ width: 280, flexShrink: 0 }}>
             {infoRow}
           </div>
 
-          {/* Chat thread */}
+          
           <div style={{
             flex: 1, background: '#fff', border: '1.5px solid #f0f0f0',
             borderRadius: 12, overflow: 'hidden',
@@ -1182,20 +1463,33 @@ export default function AppealDetailPage() {
           }}>
             <div style={{
               padding: '12px 20px', borderBottom: '1px solid #f0f0f0',
-              display: 'flex', alignItems: 'center', gap: 8,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
-              <span style={{ fontWeight: 600, fontSize: 14 }}>Переписка</span>
-              <Tag style={{ borderRadius: 20, fontSize: 11 }}>{messagesPage?.totalElements ?? 0}</Tag>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <VkIcon style={{ color: '#722ed1', fontSize: 13 }} />
+                <span style={{ fontWeight: 600, fontSize: 14 }}>Переписка</span>
+                {(messagesPage?.totalElements ?? 0) > 0 && (
+                  <span style={{ fontSize: 12, color: '#8c8c8c' }}>
+                    {messagesPage?.totalElements} сообщений
+                  </span>
+                )}
+              </div>
+              <Button
+                size="small" type="text" icon={<ReloadOutlined />}
+                onClick={() => refetchMessages()}
+                loading={msgsLoading}
+              />
             </div>
 
             <div style={{
-              padding: '16px 20px', background: '#fafafa',
+              padding: '16px 20px', background: '#f8f8f9',
               display: 'flex', flexDirection: 'column', gap: 14,
               minHeight: 300, maxHeight: 520, overflowY: 'auto',
             }}>
               {msgsLoading && <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>}
               {!msgsLoading && messagesList.length === 0 && (
-                <div style={{ textAlign: 'center', color: '#bfbfbf', padding: 40 }}>
+                <div style={{ textAlign: 'center', color: '#bfbfbf', padding: 48 }}>
+                  <VkIcon style={{ fontSize: 36, display: 'block', margin: '0 auto 8px', opacity: 0.2 }} />
                   Сообщений пока нет
                 </div>
               )}
@@ -1205,15 +1499,15 @@ export default function AppealDetailPage() {
 
             <div style={{ padding: '12px 20px', borderTop: '1px solid #f0f0f0' }}>
               {isClosed ? (
-                <div style={{ textAlign: 'center', color: '#52c41a', fontSize: 13, fontWeight: 500 }}>
-                  Обращение закрыто — переписка завершена
+                <div style={{ textAlign: 'center', color: '#8c8c8c', fontSize: 13 }}>
+                  Обращение закрыто
                 </div>
               ) : !canReply ? (
                 <Alert
                   type="info"
                   showIcon
-                  message="Отправка сообщения сейчас недоступна"
-                  description={replyHint || 'Чтобы отправить сообщение, возьмите обращение в работу.'}
+                  message="Отправка недоступна"
+                  description={replyHint || 'Возьмите обращение в работу, чтобы ответить.'}
                   style={{ borderRadius: 8 }}
                 />
               ) : (
@@ -1222,21 +1516,18 @@ export default function AppealDetailPage() {
                     channel={appeal.channel}
                     content={chatContent}
                     onChange={setChatContent}
-                    loading={sending}
+                    loading={sendingChat || sendingChatAttachment}
                     disabled={isClosed}
                     onSend={handleSendChat}
+                    attachedFile={chatAttachedFile}
+                    onAttachFile={setChatAttachedFile}
                   />
-                  <div style={{ fontSize: 11, color: '#bfbfbf', marginTop: 5 }}>
-                    Enter — отправить · Shift+Enter — новая строка
-                  </div>
                 </>
               )}
             </div>
           </div>
         </div>
       )}
-
-      {/* ── ASSIGN MODAL ─────────────────────────────────────────────────────── */}
       <Modal
         title={<Space><UserSwitchOutlined />Назначить оператора</Space>}
         open={assignModalOpen}
@@ -1293,8 +1584,6 @@ export default function AppealDetailPage() {
           </Radio.Group>
         )}
       </Modal>
-
-      {/* ── EDIT MODAL ───────────────────────────────────────────────────────── */}
       <Modal
         title={<Space><EditOutlined />Редактировать обращение</Space>}
         open={editOpen} onCancel={() => setEditOpen(false)}

@@ -11,12 +11,17 @@ import {
   ArrowUpOutlined,
   FireOutlined,
   MailOutlined,
-  FileTextOutlined,
-  PhoneOutlined,
-  MessageOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
 } from '@ant-design/icons';
+
+function VkIcon({ style }: { style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" style={{ verticalAlign: '-0.125em', ...style }}>
+      <path d="M15.684 0H8.316C1.592 0 0 1.592 0 8.316v7.368C0 22.408 1.592 24 8.316 24h7.368C22.408 24 24 22.408 24 15.684V8.316C24 1.592 22.408 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.525-2.049-1.714-1.033-1.01-1.49-.853-1.49.302v1.714c0 .344-.114.546-1.046.546-1.538 0-3.244-.93-4.44-2.66-1.803-2.537-2.296-4.438-2.296-4.838 0-.275.103-.526.606-.526H8.66c.45 0 .622.21.796.7.875 2.507 2.34 4.705 2.944 4.705.228 0 .33-.104.33-.674V11.58c-.066-1.21-.708-1.313-.708-1.743 0-.21.17-.42.444-.42h2.745c.377 0 .513.197.513.64v3.44c0 .378.166.51.28.51.228 0 .42-.132.838-.552 1.296-1.453 2.22-3.7 2.22-3.7.124-.275.332-.526.784-.526h1.743c.523 0 .638.27.523.64-.218.998-2.34 4.007-2.34 4.007-.183.305-.25.44 0 .78.183.247.782.758 1.182 1.218.735.84 1.297 1.55 1.45 2.035.152.48-.096.724-.577.724z" />
+    </svg>
+  );
+}
 import type { AppealStatus, AppealPriority, AppealChannel, AppealDirection } from '../model/types';
 
 // ─── Status ─────────────────────────────────────────────────────────────────
@@ -156,9 +161,7 @@ export function AppealPriorityBadge({ priority, size = 'default' }: { priority: 
 
 const CHANNEL_CONFIG: Record<AppealChannel, { icon: React.ReactNode; label: string; color: string }> = {
   EMAIL: { icon: <MailOutlined />, label: 'Email', color: 'blue' },
-  LETTER: { icon: <FileTextOutlined />, label: 'Письмо', color: 'default' },
-  CALL: { icon: <PhoneOutlined />, label: 'Звонок', color: 'green' },
-  CHAT: { icon: <MessageOutlined />, label: 'Чат', color: 'purple' },
+  CHAT: { icon: <VkIcon />, label: 'ВКонтакте', color: 'purple' },
 };
 
 export const CHANNEL_LABELS = Object.fromEntries(

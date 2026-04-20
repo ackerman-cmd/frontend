@@ -10,6 +10,17 @@ export interface EmailRecipient {
   name?: string | null;
 }
 
+export interface EmailAttachment {
+  id: string;
+  messageId: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes?: number;
+  storageUrl?: string;
+  isInline: boolean;
+  contentId?: string;
+}
+
 export interface EmailMessageResponse {
   id: string;
   conversationId: string;
@@ -28,6 +39,7 @@ export interface EmailMessageResponse {
   receivedAt?: string;
   createdAt: string;
   recipients: EmailRecipient[];
+  attachments: EmailAttachment[];
 }
 
 export interface MessageCreatedResponse {

@@ -87,15 +87,89 @@ export const appealsApi = crmApi.injectEndpoints({
       providesTags: (_r, _e, { id }) => [{ type: 'AppealMessages', id }],
     }),
 
-    sendOperatorMessage: build.mutation<
-      AppealMessageResponse,
-      { id: string; body: AppealMessageRequest }
-    >({
+    // ── Inbound (webhook) ──────────────────────────────────────────────────────
+
+    receiveClientMessage: build.mutation<AppealMessageResponse, { id: string; body: AppealMessageRequest }>({
       query: ({ id, body }) => ({
-        url: `/api/v1/appeals/${id}/messages`,
+        url: `/api/v1/appeals/${id}/messages/inbound`,
         method: 'POST',
         body,
       }),
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'AppealMessages', id },
+        { type: 'Appeal', id },
+      ],
+    }),
+
+    // ── Outbound: EMAIL channel ────────────────────────────────────────────────
+
+    sendEmailMessage: build.mutation<
+      AppealMessageResponse,
+      { id: string; content?: string; fromEmail?: string; htmlContent?: string }
+    >({
+      query: ({ id, content, fromEmail, htmlContent }) => ({
+        url: `/api/v1/appeals/${id}/messages/email`,
+        method: 'POST',
+        body: { content: content ?? '', fromEmail, htmlContent },
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'AppealMessages', id },
+        { type: 'Appeal', id },
+      ],
+    }),
+
+    sendEmailMessageWithAttachment: build.mutation<
+      AppealMessageResponse,
+      { id: string; content?: string; fromEmail?: string; htmlContent?: string; file: File }
+    >({
+      query: ({ id, content, fromEmail, htmlContent, file }) => {
+        const form = new FormData();
+        if (content) form.append('content', content);
+        if (fromEmail) form.append('fromEmail', fromEmail);
+        if (htmlContent) form.append('htmlContent', htmlContent);
+        form.append('file', file);
+        return {
+          url: `/api/v1/appeals/${id}/messages/email/with-attachment`,
+          method: 'POST',
+          body: form,
+          formData: true,
+        };
+      },
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'AppealMessages', id },
+        { type: 'Appeal', id },
+      ],
+    }),
+
+    // ── Outbound: CHAT (VK) channel ────────────────────────────────────────────
+
+    sendChatMessage: build.mutation<AppealMessageResponse, { id: string; content: string }>({
+      query: ({ id, content }) => ({
+        url: `/api/v1/appeals/${id}/messages/chat`,
+        method: 'POST',
+        body: { content },
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'AppealMessages', id },
+        { type: 'Appeal', id },
+      ],
+    }),
+
+    sendChatMessageWithAttachment: build.mutation<
+      AppealMessageResponse,
+      { id: string; content?: string; file: File }
+    >({
+      query: ({ id, content, file }) => {
+        const form = new FormData();
+        if (content) form.append('content', content);
+        form.append('file', file);
+        return {
+          url: `/api/v1/appeals/${id}/messages/chat/with-attachment`,
+          method: 'POST',
+          body: form,
+          formData: true,
+        };
+      },
       invalidatesTags: (_r, _e, { id }) => [
         { type: 'AppealMessages', id },
         { type: 'Appeal', id },
@@ -126,7 +200,11 @@ export const {
   useAssignOperatorMutation,
   useChangeAppealStatusMutation,
   useGetAppealMessagesQuery,
-  useSendOperatorMessageMutation,
+  useReceiveClientMessageMutation,
+  useSendEmailMessageMutation,
+  useSendEmailMessageWithAttachmentMutation,
+  useSendChatMessageMutation,
+  useSendChatMessageWithAttachmentMutation,
   useGetAvailableActionsQuery,
   useFetchAppealsMutation,
 } = appealsApi;

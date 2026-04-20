@@ -10,6 +10,7 @@ import {
   ApartmentOutlined,
   StarOutlined,
   TagsOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import { Tooltip } from 'antd';
 import { useAppDispatch } from '../store/hooks';
@@ -35,6 +36,7 @@ const MAIN_NAV: NavItem[] = [
   { to: '/assignment-groups', label: 'Группы назначения', icon: <ApartmentOutlined />, exact: false, requiredRoles: [ROLE_ADMIN] },
   { to: '/skill-groups',      label: 'Скилл-группы',      icon: <StarOutlined />,      exact: false, requiredRoles: [ROLE_ADMIN] },
   { to: '/appeal-topics',     label: 'Тематики',          icon: <TagsOutlined />,      exact: false, requiredRoles: [ROLE_ADMIN] },
+  { to: '/reports',           label: 'Отчёты',            icon: <BarChartOutlined />,  exact: false, requiredRoles: [ROLE_ADMIN] },
 ];
 
 const ADMIN_NAV: NavItem[] = [

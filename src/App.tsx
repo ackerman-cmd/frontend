@@ -18,6 +18,7 @@ const AssignmentGroupsPage = React.lazy(() => import('./pages/AssignmentGroupsPa
 const SkillGroupsPage      = React.lazy(() => import('./pages/SkillGroupsPage/SkillGroupsPage'));
 const AppealTopicsPage     = React.lazy(() => import('./pages/AppealTopicsPage/AppealTopicsPage'));
 const AdminUsersPage       = React.lazy(() => import('./pages/AdminUsersPage/AdminUsersPage'));
+const ReportsPage          = React.lazy(() => import('./pages/ReportsPage/ReportsPage'));
 
 function PrivateRoute({ children }: { children: React.ReactElement }) {
   const { isAuthenticated } = useAuth();
@@ -106,6 +107,7 @@ function AppRoot() {
           <Route path="appeal-topics"         element={<AdminRoute><AppealTopicsPage /></AdminRoute>} />
           <Route path="admin/users"           element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
           <Route path="admin/users/:id"       element={<AdminRoute><WipPage title="Детали пользователя" /></AdminRoute>} />
+          <Route path="reports"               element={<AdminRoute><ReportsPage /></AdminRoute>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
