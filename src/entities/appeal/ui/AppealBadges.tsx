@@ -14,6 +14,7 @@ import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
 } from '@ant-design/icons';
+import type { AppealStatus, AppealPriority, AppealChannel, AppealDirection } from '../model/types';
 
 function VkIcon({ style }: { style?: React.CSSProperties }) {
   return (
@@ -22,7 +23,6 @@ function VkIcon({ style }: { style?: React.CSSProperties }) {
     </svg>
   );
 }
-import type { AppealStatus, AppealPriority, AppealChannel, AppealDirection } from '../model/types';
 
 // ─── Status ─────────────────────────────────────────────────────────────────
 
