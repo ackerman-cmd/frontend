@@ -58,7 +58,7 @@ export default function AppLayout() {
     dispatch(logout());
     dispatch(baseApi.util.resetApiState());
     dispatch(crmApi.util.resetApiState());
-    navigate('/login', { replace: true });
+    navigate('/signin', { replace: true });
   };
 
   const close = () => setSidebarOpen(false);

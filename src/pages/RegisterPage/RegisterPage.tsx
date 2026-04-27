@@ -78,7 +78,7 @@ export default function RegisterPage() {
               Перейдите по ссылке для активации аккаунта.<br />
               <strong>Ссылка действительна 24 часа.</strong>
             </p>
-            <button className={styles.btnPrimary} onClick={() => navigate('/login')}>
+            <button className={styles.btnPrimary} onClick={() => navigate('/signin')}>
               Перейти ко входу
             </button>
           </div>
@@ -91,7 +91,7 @@ export default function RegisterPage() {
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.cardTop}>
-          <Link to="/login" className={styles.backLink}>
+          <Link to="/signin" className={styles.backLink}>
             <ArrowLeftOutlined /> Назад ко входу
           </Link>
           <h1 className={styles.cardTitle}>Создать аккаунт</h1>
@@ -198,7 +198,7 @@ export default function RegisterPage() {
 
           <div className={styles.loginLink}>
             Уже есть аккаунт?{' '}
-            <Link to="/login">Войти</Link>
+            <Link to="/signin">Войти</Link>
           </div>
         </div>
       </div>

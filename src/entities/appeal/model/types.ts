@@ -61,6 +61,8 @@ export interface AppealResponse {
   emailConversationId?: string;
   /** VK peer_id пользователя/чата, заполнен только для channel=CHAT */
   vkPeerId?: number;
+  /** Краткое резюме обращения, сгенерированное LLM-сервисом автоматически */
+  summary?: string;
 }
 
 export interface AppealAction {

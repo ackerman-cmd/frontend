@@ -14,6 +14,7 @@ import {
   DownOutlined, LinkOutlined, CloseOutlined,
   FileOutlined, FilePdfOutlined, FileImageOutlined, FileExcelOutlined,
   FileWordOutlined, FileZipOutlined, FileTextOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -1114,6 +1115,22 @@ export default function AppealDetailPage() {
             {appeal.description && (
               <Descriptions.Item label="Описание">
                 <Text style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{appeal.description}</Text>
+              </Descriptions.Item>
+            )}
+            {appeal.summary && (
+              <Descriptions.Item
+                label={
+                  <Tooltip title="Краткое резюме, сгенерированное автоматически">
+                    <Space size={4}>
+                      <RobotOutlined style={{ color: '#722ed1' }} />
+                      <span>AI-резюме</span>
+                    </Space>
+                  </Tooltip>
+                }
+              >
+                <Text style={{ whiteSpace: 'pre-wrap', fontSize: 12, color: '#595959' }}>
+                  {appeal.summary}
+                </Text>
               </Descriptions.Item>
             )}
           </Descriptions>

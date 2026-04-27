@@ -9,7 +9,7 @@ import {
   PlusOutlined, SearchOutlined, EyeOutlined, PlayCircleOutlined,
   CloseCircleOutlined, StopOutlined, DeleteOutlined, ReloadOutlined,
   FilterOutlined, ClockCircleOutlined, SyncOutlined, CheckCircleOutlined, FireOutlined,
-  MoreOutlined,
+  MoreOutlined, RobotOutlined,
 } from '@ant-design/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -215,6 +215,16 @@ export default function AppealsPage() {
               <span style={{ fontSize: 11, color: '#8c8c8c' }}>
                 {record.contactEmail}
               </span>
+            )}
+            {record.summary && (
+              <Tooltip title={record.summary} placement="bottomLeft">
+                <span style={{ fontSize: 11, color: '#722ed1', cursor: 'default', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  <RobotOutlined />
+                  <span style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block' }}>
+                    {record.summary}
+                  </span>
+                </span>
+              </Tooltip>
             )}
           </div>
         </div>

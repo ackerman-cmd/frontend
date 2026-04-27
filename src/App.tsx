@@ -22,12 +22,12 @@ const ReportsPage          = React.lazy(() => import('./pages/ReportsPage/Report
 
 function PrivateRoute({ children }: { children: React.ReactElement }) {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  return isAuthenticated ? children : <Navigate to="/signin" replace />;
 }
 
 function AdminRoute({ children }: { children: React.ReactElement }) {
   const { isAuthenticated, isAdmin } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/signin" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
   return children;
 }
@@ -91,7 +91,7 @@ function AppRoot() {
   return (
     <React.Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route path="/login"        element={<LoginPage />} />
+        <Route path="/signin"       element={<LoginPage />} />
         <Route path="/register"     element={<RegisterPage />} />
         <Route path="/callback"     element={<AuthCallbackPage />} />
         <Route path="/auth/verify"  element={<VerifyEmailPage />} />

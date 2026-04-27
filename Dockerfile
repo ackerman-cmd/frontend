@@ -8,18 +8,16 @@ RUN npm ci
 
 COPY . .
 
-# Подставьте при сборке: docker build --build-arg REACT_APP_API_URL=https://api.example.com .
+# ARG-переменные доступны в RUN если переданы через --build-arg.
+# ENV-инструкция намеренно отсутствует: пустой ARG ставил бы "" в process.env
+# и перебивал .env.production. Без ENV непереданный ARG просто не попадает
+# в process.env, и CRA штатно читает .env.production.
 ARG REACT_APP_API_URL
 ARG REACT_APP_CRM_API_URL
 ARG REACT_APP_EMAIL_INTEGRATION_API_URL
+ARG REACT_APP_REPORT_API_URL
 ARG REACT_APP_OAUTH_CLIENT_ID
 ARG REACT_APP_OAUTH_REDIRECT_URI
-
-ENV REACT_APP_API_URL=$REACT_APP_API_URL \
-    REACT_APP_CRM_API_URL=$REACT_APP_CRM_API_URL \
-    REACT_APP_EMAIL_INTEGRATION_API_URL=$REACT_APP_EMAIL_INTEGRATION_API_URL \
-    REACT_APP_OAUTH_CLIENT_ID=$REACT_APP_OAUTH_CLIENT_ID \
-    REACT_APP_OAUTH_REDIRECT_URI=$REACT_APP_OAUTH_REDIRECT_URI
 
 RUN npm run build
 

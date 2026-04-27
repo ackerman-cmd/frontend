@@ -54,7 +54,7 @@ export default function AuthCallbackPage() {
           <p className={styles.loadingDesc}>
             {errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : `Ошибка: ${errorParam}`}
           </p>
-          <button className={styles.btn} onClick={() => navigate('/login')}>Вернуться ко входу</button>
+          <button className={styles.btn} onClick={() => navigate('/signin')}>Вернуться ко входу</button>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@ export default function AuthCallbackPage() {
           </div>
           <h2 className={styles.loadingTitle}>Некорректная ссылка</h2>
           <p className={styles.loadingDesc}>Параметр code отсутствует. Попробуйте войти снова.</p>
-          <button className={styles.btn} onClick={() => navigate('/login')}>На страницу входа</button>
+          <button className={styles.btn} onClick={() => navigate('/signin')}>На страницу входа</button>
         </div>
       </div>
     </div>
@@ -88,7 +88,7 @@ export default function AuthCallbackPage() {
             </div>
             <h2 className={styles.loadingTitle}>Ошибка входа</h2>
             <p className={styles.loadingDesc}>{detail ?? 'Authorization code истёк или уже использован.'}</p>
-            <button className={styles.btn} onClick={() => navigate('/login')}>Попробовать снова</button>
+            <button className={styles.btn} onClick={() => navigate('/signin')}>Попробовать снова</button>
           </div>
         </div>
       </div>

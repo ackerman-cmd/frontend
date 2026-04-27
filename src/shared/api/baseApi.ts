@@ -40,7 +40,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
       !PUBLIC_ENDPOINTS.includes(api.endpoint)
     ) {
       api.dispatch(logout());
-      window.location.href = '/login';
+      window.location.href = '/signin';
     }
 
     return result;

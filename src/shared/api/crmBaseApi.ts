@@ -25,7 +25,7 @@ const crmBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError
     const result = await rawCrmQuery(args, api, extraOptions);
     if (result.error?.status === 401) {
       api.dispatch(logout());
-      window.location.href = '/login';
+      window.location.href = '/signin';
     }
     return result;
   };

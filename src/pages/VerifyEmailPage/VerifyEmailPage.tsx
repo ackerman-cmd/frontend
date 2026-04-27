@@ -16,7 +16,7 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     if (!isSuccess) return;
-    const t = setTimeout(() => navigate('/login', { replace: true }), 2500);
+    const t = setTimeout(() => navigate('/signin', { replace: true }), 2500);
     return () => clearTimeout(t);
   }, [isSuccess, navigate]);
 
@@ -28,7 +28,7 @@ export default function VerifyEmailPage() {
           <div className={`${styles.icon} ${styles.iconWarn}`}><WarningOutlined style={{ color: '#d4b106' }} /></div>
           <h2 className={styles.title}>Некорректная ссылка</h2>
           <p className={styles.desc}>Токен подтверждения отсутствует. Перейдите по ссылке из письма.</p>
-          <button className={styles.btn} onClick={() => navigate('/login')}>На страницу входа</button>
+          <button className={styles.btn} onClick={() => navigate('/signin')}>На страницу входа</button>
         </div>
       </div>
     </div>
@@ -59,7 +59,7 @@ export default function VerifyEmailPage() {
             <div className={`${styles.icon} ${styles.iconError}`}><CloseCircleOutlined style={{ color: 'var(--red)', fontSize: 32 }} /></div>
             <h2 className={styles.title}>Ошибка подтверждения</h2>
             <p className={styles.desc}>{detail ?? 'Токен истёк или уже использован.'}</p>
-            <button className={styles.btn} onClick={() => navigate('/login')}>На страницу входа</button>
+            <button className={styles.btn} onClick={() => navigate('/signin')}>На страницу входа</button>
           </div>
         </div>
       </div>
@@ -76,7 +76,7 @@ export default function VerifyEmailPage() {
           <p className={styles.desc}>
             Аккаунт активирован. Вы будете перенаправлены на страницу входа через несколько секунд.
           </p>
-          <button className={styles.btn} onClick={() => navigate('/login', { replace: true })}>
+          <button className={styles.btn} onClick={() => navigate('/signin', { replace: true })}>
             Перейти ко входу
           </button>
         </div>

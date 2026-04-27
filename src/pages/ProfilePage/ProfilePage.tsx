@@ -82,7 +82,7 @@ export default function ProfilePage() {
   if (isError || !user) return (
     <div className={styles.errorWrap}>
       <p>Не удалось загрузить профиль</p>
-      <button className={styles.btnSecondary} onClick={() => { dispatch(logout()); navigate('/login', { replace: true }); }}>
+      <button className={styles.btnSecondary} onClick={() => { dispatch(logout()); navigate('/signin', { replace: true }); }}>
         Выйти
       </button>
     </div>
